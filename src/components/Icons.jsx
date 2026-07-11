@@ -38,6 +38,20 @@ export const CarIcon = (props) => (
   </svg>
 )
 
+export const MoreIcon = (props) => (
+  <svg viewBox="0 0 24 24" width="24" height="24" {...base} {...props}>
+    <circle cx="6" cy="6" r="1.5" />
+    <circle cx="12" cy="6" r="1.5" />
+    <circle cx="18" cy="6" r="1.5" />
+    <circle cx="6" cy="12" r="1.5" />
+    <circle cx="12" cy="12" r="1.5" />
+    <circle cx="18" cy="12" r="1.5" />
+    <circle cx="6" cy="18" r="1.5" />
+    <circle cx="12" cy="18" r="1.5" />
+    <circle cx="18" cy="18" r="1.5" />
+  </svg>
+)
+
 export const BackIcon = (props) => (
   <svg viewBox="0 0 24 24" width="24" height="24" {...base} {...props}>
     <path d="M15 5l-7 7 7 7" />

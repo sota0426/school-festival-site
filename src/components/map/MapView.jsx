@@ -1,96 +1,119 @@
-import { useEffect, useRef, useState } from 'react'
-import { CAMPUS, buildingById, buildingCenter } from '../../data/campus'
-import { FLOOR_PLANS, FLOOR_VIEW, roomCenter } from '../../data/floors'
-import { stallById } from '../../data/stalls'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { BUILDINGS, CAMPUS } from '../../data/campus'
+import { FLOOR_PLANS, FLOOR_VIEW } from '../../data/floors'
+import { STALLS, stallById } from '../../data/stalls'
 import { CATEGORIES, CATEGORY_IDS } from '../../data/categories'
 import { useApp } from '../../lib/AppContext'
-import { BackIcon } from '../Icons'
-import PanZoom from './PanZoom'
 import CampusMap from './CampusMap'
 import FloorMap from './FloorMap'
 import BottomSheet from './BottomSheet'
+import { imageFromDb, readMapAnnotations } from '../../lib/mapEditorStorage'
+import MapEditor from './MapEditor'
+
+const GROUNDS_KEY = 'grounds'
+const CAMPUS_KEY = 'campus'
 
 export default function MapView({ mapTarget }) {
   const { openDetail } = useApp()
-  // campus | zooming(建物へズーム中) | floor(フロア図) | leaving(全体へ戻り中)
-  const [phase, setPhase] = useState('campus')
-  const [buildingId, setBuildingId] = useState(null)
-  const [floorId, setFloorId] = useState(null)
   const [filter, setFilter] = useState(null)
   const [sheetStall, setSheetStall] = useState(null)
-  const [campusFocus, setCampusFocus] = useState(null)
-  const [floorFocus, setFloorFocus] = useState(null)
-  const timer = useRef(null)
+  const [focusedStallId, setFocusedStallId] = useState(null)
+  const [activeKey, setActiveKey] = useState(GROUNDS_KEY)
+  const [editorOpen, setEditorOpen] = useState(false)
+  const [customMaps, setCustomMaps] = useState({ annotations: {}, images: {} })
+  const scroller = useRef(null)
+  const scrollTimer = useRef(null)
 
-  useEffect(() => () => clearTimeout(timer.current), [])
+  const floorSections = useMemo(
+    () => BUILDINGS.flatMap((building) => {
+      const plan = FLOOR_PLANS[building.id]
+      if (!plan) return []
+      return plan.floors.map((floor) => ({
+        key: `${building.id}-${floor.id}`,
+        building,
+        plan,
+        floor,
+      }))
+    }),
+    [],
+  )
 
-  const building = buildingId ? buildingById(buildingId) : null
-  const plan = buildingId ? FLOOR_PLANS[buildingId] : null
+  const visibleStalls = STALLS.filter((stall) => !filter || stall.cat === filter)
+  const activeSection = floorSections.find((section) => section.key === activeKey)
 
-  const enterBuilding = (b) => {
-    setSheetStall(null)
-    setBuildingId(b.id)
-    setFloorId(FLOOR_PLANS[b.id].floors[0].id)
-    setFloorFocus(null)
-    setPhase('zooming')
-    setCampusFocus({ ...buildingCenter(b), s: 3, key: `in-${b.id}-${Date.now()}` })
-    clearTimeout(timer.current)
-    timer.current = setTimeout(() => setPhase('floor'), 420)
+  const reloadCustomMaps = async () => {
+    const keys = [GROUNDS_KEY, CAMPUS_KEY, ...floorSections.map((section) => section.key)]
+    const loadedImages = await Promise.all(keys.map(async (key) => [key, await imageFromDb(key)]))
+    setCustomMaps({
+      annotations: readMapAnnotations(),
+      images: Object.fromEntries(loadedImages.filter(([, value]) => value)),
+    })
   }
 
-  const exitBuilding = () => {
-    setSheetStall(null)
-    setPhase('leaving')
-    setCampusFocus({ x: CAMPUS.w / 2, y: CAMPUS.h / 2, s: 1, key: `out-${Date.now()}` })
-    clearTimeout(timer.current)
-    timer.current = setTimeout(() => {
-      setPhase('campus')
-      setBuildingId(null)
-    }, 420)
+  useEffect(() => {
+    reloadCustomMaps()
+    window.addEventListener('festival-map-editor-save', reloadCustomMaps)
+    return () => window.removeEventListener('festival-map-editor-save', reloadCustomMaps)
+    // Floor section keys are static for this build.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => () => clearTimeout(scrollTimer.current), [])
+
+  const scrollToSection = (key, behavior = 'smooth') => {
+    const target = scroller.current?.querySelector(`[data-map-section="${key}"]`)
+    if (!target || !scroller.current) return
+    scroller.current.scrollTo({ top: target.offsetTop, behavior })
   }
 
-  // 詳細ページ「マップで見る」やアクセスページからのフォーカス要求
+  const showStallOnMap = (stall, showSheet = false) => {
+    setFocusedStallId(stall.id)
+    setSheetStall(showSheet ? stall : null)
+    const key = stall.loc.type === 'out'
+      ? GROUNDS_KEY
+      : `${stall.loc.building}-${stall.loc.floor}`
+    setActiveKey(key)
+    requestAnimationFrame(() => scrollToSection(key))
+  }
+
   useEffect(() => {
     if (!mapTarget) return
+    setFilter(null)
     if (mapTarget.type === 'stall') {
       const stall = stallById(mapTarget.id)
-      if (!stall) return
-      setFilter(null)
-      if (stall.loc.type === 'out') {
-        clearTimeout(timer.current)
-        setBuildingId(null)
-        setPhase('campus')
-        setCampusFocus({ x: stall.loc.x, y: stall.loc.y, s: 2.2, key: `tg-${mapTarget.ts}` })
-        setSheetStall(stall)
-      } else {
-        clearTimeout(timer.current)
-        setBuildingId(stall.loc.building)
-        setFloorId(stall.loc.floor)
-        setPhase('floor')
-        setFloorFocus({
-          ...roomCenter(stall.loc.building, stall.loc.floor, stall.loc.room),
-          s: 1.5,
-          key: `tg-${mapTarget.ts}`,
-        })
-        setSheetStall(stall)
-      }
+      if (stall) showStallOnMap(stall, true)
     } else if (mapTarget.type === 'point') {
-      clearTimeout(timer.current)
-      setBuildingId(null)
-      setPhase('campus')
       setSheetStall(null)
-      setCampusFocus({ x: mapTarget.x, y: mapTarget.y, s: 2, key: `tg-${mapTarget.ts}` })
+      setFocusedStallId(null)
+      setActiveKey(GROUNDS_KEY)
+      scrollToSection(GROUNDS_KEY)
     }
+    // mapTarget.ts is the request identity; callbacks intentionally stay local.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapTarget])
 
-  const campusHidden = phase === 'floor'
-  const campusFading = phase === 'zooming'
-  const floorVisible = phase === 'floor'
+  const handlePageScroll = (event) => {
+    clearTimeout(scrollTimer.current)
+    scrollTimer.current = setTimeout(() => {
+      const container = event.currentTarget
+      const center = container.scrollTop + container.clientHeight / 2
+      let closest = null
+      let distance = Infinity
+      for (const section of container.children) {
+        const nextDistance = Math.abs(section.offsetTop + section.offsetHeight / 2 - center)
+        if (nextDistance < distance) {
+          distance = nextDistance
+          closest = section
+        }
+      }
+      const key = closest?.dataset.mapSection
+      if (key) setActiveKey(key)
+    }, 80)
+  }
 
   return (
     <div className="relative flex-1 overflow-hidden bg-[#f4f1e3]">
-      {/* カテゴリフィルタ */}
-      <div className="absolute inset-x-0 top-0 z-20 flex gap-2 overflow-x-auto px-3 pb-1 pt-3 [scrollbar-width:none]">
+      <div className="absolute inset-x-0 top-0 z-40 flex gap-2 overflow-x-auto bg-gradient-to-b from-[#f4f1e3] via-[#f4f1e3]/95 to-transparent px-3 pb-5 pt-3 [scrollbar-width:none]">
         <FilterChip label="すべて" active={!filter} color="#6b6255" onClick={() => setFilter(null)} />
         {CATEGORY_IDS.map((id) => (
           <FilterChip
@@ -103,99 +126,237 @@ export default function MapView({ mapTarget }) {
         ))}
       </div>
 
-      {/* 全体マップ */}
       <div
-        className={`absolute inset-0 transition-opacity duration-300 ${
-          campusHidden
-            ? 'pointer-events-none opacity-0'
-            : campusFading
-              ? 'pointer-events-none opacity-0 [transition-delay:180ms]'
-              : 'opacity-100'
-        }`}
+        ref={scroller}
+        onScroll={handlePageScroll}
+        className="h-full snap-y snap-mandatory overflow-y-auto overscroll-y-contain scroll-smooth [scrollbar-width:none]"
+        aria-label="学校全体と全校舎のフロアマップ"
       >
-        <PanZoom viewW={CAMPUS.w} viewH={CAMPUS.h} focus={campusFocus} maxScale={5}>
-          {(scale) => (
-            <CampusMap
-              scale={scale}
-              filter={filter}
-              selectedStallId={sheetStall?.id}
-              onPinTap={(s) => setSheetStall(s)}
-              onBuildingTap={enterBuilding}
-            />
+        <section
+          data-map-section={GROUNDS_KEY}
+          className="relative flex h-full min-h-full snap-start snap-always items-center justify-center px-1 pb-32 pt-16"
+          aria-label="敷地内全体マップ"
+        >
+          <div className="absolute left-4 top-16 z-10 rounded-full bg-ink px-4 py-2 text-xs font-black text-white shadow-md">
+            敷地内全体
+          </div>
+          {customMaps.images[GROUNDS_KEY] ? (
+            <CustomMapImage image={customMaps.images[GROUNDS_KEY]} annotations={customMaps.annotations[GROUNDS_KEY]} label="敷地内全体" />
+          ) : (
+            <svg viewBox={`0 0 ${CAMPUS.w} ${CAMPUS.h}`} className="h-full w-full" preserveAspectRatio="xMidYMid meet">
+              <CampusMap
+                scale={1}
+                filter={filter}
+                selectedStallId={focusedStallId}
+                onPinTap={(stall) => showStallOnMap(stall, true)}
+                onBuildingTap={(building) => {
+                  const firstFloor = FLOOR_PLANS[building.id]?.floors[0]
+                  if (!firstFloor) return
+                  const key = `${building.id}-${firstFloor.id}`
+                  setActiveKey(key)
+                  scrollToSection(key)
+                }}
+              />
+            </svg>
           )}
-        </PanZoom>
-        {phase === 'campus' && (
-          <p className="pointer-events-none absolute bottom-2 left-3 z-10 rounded-full bg-white/80 px-3 py-1 text-[10px] font-bold text-stone-500">
-            🔴点線の建物をタップすると館内マップ
+          <p className="pointer-events-none absolute bottom-32 rounded-full bg-white/90 px-4 py-2 text-[11px] font-black text-stone-500 shadow-sm">
+            ↓ 下へスクロールして校舎全体を見る
           </p>
-        )}
+        </section>
+
+        <section
+          data-map-section={CAMPUS_KEY}
+          className="relative flex h-full min-h-full snap-start snap-always items-center justify-center px-2 pb-32 pt-20"
+          aria-label="校舎全体マップ"
+        >
+          <div className="absolute left-4 top-16 z-10 rounded-full bg-ink px-4 py-2 text-xs font-black text-white shadow-md">
+            校舎全体
+          </div>
+          <CustomMapImage
+            image={customMaps.images[CAMPUS_KEY] || '/images/campus-building-guide-dummy.png'}
+            annotations={customMaps.annotations[CAMPUS_KEY]}
+            label="校舎全体"
+          />
+          <p className="pointer-events-none absolute bottom-32 rounded-full bg-white/90 px-4 py-2 text-[11px] font-black text-stone-500 shadow-sm">
+            ↓ 下へスクロールして各校舎のフロアを見る
+          </p>
+        </section>
+
+        {floorSections.map((section, index) => {
+          const { building, plan, floor, key } = section
+          const next = floorSections[index + 1]
+          return (
+            <section
+              key={key}
+              data-map-section={key}
+              className="relative flex h-full min-h-full snap-start snap-always flex-col items-center justify-center px-2 pb-32 pt-20"
+              aria-label={`${plan.name} ${floor.label}`}
+            >
+              <div className="absolute inset-x-4 top-16 z-10 flex items-center justify-between">
+                <span className="rounded-full bg-ink px-4 py-2 text-xs font-black text-white shadow-md">
+                  {plan.name} · {floor.label}
+                </span>
+                <span className="rounded-full bg-white/90 px-3 py-2 text-[10px] font-bold text-stone-500 shadow-sm">
+                  {index + 1} / {floorSections.length}
+                </span>
+              </div>
+              {customMaps.images[key] ? (
+                <CustomMapImage image={customMaps.images[key]} annotations={customMaps.annotations[key]} label={`${plan.name} ${floor.label}`} />
+              ) : (
+                <svg
+                  viewBox={`0 0 ${FLOOR_VIEW.w} ${FLOOR_VIEW.h}`}
+                  className="max-h-full w-full drop-shadow-sm"
+                  preserveAspectRatio="xMidYMid meet"
+                >
+                  <FloorMap
+                    buildingId={building.id}
+                    floorId={floor.id}
+                    filter={filter}
+                    selectedStallId={activeKey === key ? focusedStallId : null}
+                    onPinTap={(stall) => showStallOnMap(stall, true)}
+                  />
+                </svg>
+              )}
+              <p className="pointer-events-none absolute bottom-32 rounded-full bg-white/85 px-4 py-1.5 text-[10px] font-bold text-stone-400">
+                {next ? `↓ ${next.plan.name} · ${next.floor.label}` : 'すべてのフロアを表示しました'}
+              </p>
+            </section>
+          )
+        })}
       </div>
 
-      {/* フロアマップ */}
-      {building && plan && (
-        <div
-          className={`absolute inset-0 flex flex-col transition-all duration-300 ${
-            floorVisible ? 'scale-100 opacity-100' : 'pointer-events-none scale-90 opacity-0'
-          }`}
+      <div className="pointer-events-none absolute inset-x-0 top-14 z-30 flex justify-center">
+        <button
+          type="button"
+          onClick={() => scrollToSection(GROUNDS_KEY)}
+          className="pointer-events-auto rounded-full bg-white/90 px-3 py-1.5 text-[10px] font-black text-stone-500 shadow-sm backdrop-blur active:scale-90"
         >
-          <div className="z-10 flex items-center gap-2 px-3 pt-14">
-            <button
-              type="button"
-              onClick={exitBuilding}
-              className="flex items-center gap-1 rounded-full bg-white px-3 py-2 text-xs font-bold text-ink shadow-md transition-transform active:scale-90"
-            >
-              <BackIcon width="14" height="14" />
-              全体マップ
-            </button>
-            <span className="rounded-full bg-ink px-4 py-2 text-xs font-black text-white shadow-md">
-              {plan.name}
-            </span>
-            <div className="ml-auto flex gap-1.5">
-              {plan.floors.map((f) => (
-                <button
-                  key={f.id}
-                  type="button"
-                  onClick={() => {
-                    setFloorId(f.id)
-                    setSheetStall(null)
-                  }}
-                  className={`h-9 w-9 rounded-full text-xs font-black shadow-md transition-all active:scale-90 ${
-                    floorId === f.id ? 'bg-fest text-white' : 'bg-white text-stone-500'
-                  }`}
-                >
-                  {f.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="min-h-0 flex-1">
-            <PanZoom
-              key={`${buildingId}-${floorId}`}
-              viewW={FLOOR_VIEW.w}
-              viewH={FLOOR_VIEW.h}
-              focus={floorFocus}
-              maxScale={3}
-            >
-              {() => (
-                <FloorMap
-                  buildingId={buildingId}
-                  floorId={floorId}
-                  filter={filter}
-                  selectedStallId={sheetStall?.id}
-                  onPinTap={(s) => setSheetStall(s)}
-                />
-              )}
-            </PanZoom>
-          </div>
-        </div>
-      )}
+          {activeSection
+            ? `${activeSection.plan.name} ${activeSection.floor.label}　↑ 敷地内全体へ`
+            : activeKey === CAMPUS_KEY ? '校舎全体　↑ 敷地内全体へ' : '敷地内全体マップ'}
+        </button>
+      </div>
 
-      <BottomSheet
-        stall={sheetStall}
-        onClose={() => setSheetStall(null)}
-        onDetail={(id) => openDetail(id)}
-      />
+      <button
+        type="button"
+        onClick={() => setEditorOpen(true)}
+        className="absolute right-3 top-14 z-40 rounded-full bg-ink px-3 py-2 text-[10px] font-black text-white shadow-md active:scale-90"
+      >
+        ✏️ マップ編集
+      </button>
+
+      <div className="absolute inset-x-0 bottom-0 z-30">
+        <StallCarousel
+          key={filter || 'all'}
+          stalls={visibleStalls}
+          activeId={focusedStallId}
+          onActive={showStallOnMap}
+          onDetail={openDetail}
+        />
+      </div>
+
+      <BottomSheet stall={sheetStall} onClose={() => setSheetStall(null)} onDetail={openDetail} />
+      {editorOpen && <MapEditor onClose={() => setEditorOpen(false)} />}
     </div>
+  )
+}
+
+function CustomMapImage({ image, annotations = [], label }) {
+  return (
+    <div className="relative mx-auto aspect-[4/3] max-h-full w-full overflow-hidden rounded-2xl bg-white shadow-sm">
+      <img src={image} alt={`${label}の登録済みマップ`} className="h-full w-full object-contain" />
+      {annotations.map((item) => (
+        <div
+          key={item.id}
+          className="pointer-events-none absolute grid place-items-center overflow-hidden rounded-md border-2 border-orange-400 bg-orange-50/80 px-1 text-center text-[10px] font-black text-ink backdrop-blur-[1px]"
+          style={{ left: `${item.x}%`, top: `${item.y}%`, width: `${item.w}%`, height: `${item.h}%` }}
+        >
+          {item.name}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function StallCarousel({ stalls, activeId, onActive, onDetail }) {
+  const scroller = useRef(null)
+  const programmaticScroll = useRef(false)
+  const scrollTimer = useRef(null)
+
+  useEffect(() => () => clearTimeout(scrollTimer.current), [])
+
+  useEffect(() => {
+    if (!activeId || !scroller.current) return
+    const card = scroller.current.querySelector(`[data-stall-id="${activeId}"]`)
+    if (!card) return
+    programmaticScroll.current = true
+    card.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+    const timeout = setTimeout(() => { programmaticScroll.current = false }, 450)
+    return () => clearTimeout(timeout)
+  }, [activeId])
+
+  const handleScroll = () => {
+    if (programmaticScroll.current || !scroller.current) return
+    clearTimeout(scrollTimer.current)
+    scrollTimer.current = setTimeout(() => {
+      if (!scroller.current) return
+      const center = scroller.current.scrollLeft + scroller.current.clientWidth / 2
+      let closest = null
+      let distance = Infinity
+      for (const card of scroller.current.children) {
+        const nextDistance = Math.abs(card.offsetLeft + card.offsetWidth / 2 - center)
+        if (nextDistance < distance) {
+          distance = nextDistance
+          closest = card
+        }
+      }
+      const stall = stalls.find((item) => item.id === closest?.dataset.stallId)
+      if (stall && stall.id !== activeId) onActive(stall)
+    }, 100)
+  }
+
+  if (stalls.length === 0) {
+    return <div className="bg-white/95 px-4 py-3 text-center text-xs font-bold text-stone-500">条件に合う模擬店がありません</div>
+  }
+
+  return (
+    <section className="bg-white/95 pb-[max(10px,env(safe-area-inset-bottom))] pt-2 shadow-[0_-5px_22px_rgba(51,38,31,0.12)] backdrop-blur-sm" aria-label="すべての模擬店">
+      <div className="flex items-center justify-between px-4 pb-1.5">
+        <h2 className="text-xs font-black text-ink">すべての模擬店</h2>
+        <span className="text-[10px] font-bold text-stone-400">横にスワイプ · {stalls.length}店 · 場所へ自動移動</span>
+      </div>
+      <div ref={scroller} onScroll={handleScroll} className="flex snap-x snap-mandatory gap-2.5 overflow-x-auto px-[8vw] [scrollbar-width:none]">
+        {stalls.map((stall) => {
+          const cat = CATEGORIES[stall.cat]
+          const active = stall.id === activeId
+          return (
+            <article
+              key={stall.id}
+              data-stall-id={stall.id}
+              onClick={() => onActive(stall, true)}
+              className={`w-[78vw] max-w-[340px] shrink-0 snap-center rounded-2xl border bg-white px-3.5 py-2.5 transition-all ${active ? 'border-fest shadow-md' : 'border-stone-200'}`}
+            >
+              <div className="flex items-center gap-3">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-xl" style={{ background: cat.soft }}>{cat.emoji}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-black text-ink">{stall.name}</p>
+                  <p className="truncate text-[11px] font-bold text-stone-500">📍 {stall.placeLabel}</p>
+                  <p className="truncate text-[10px] text-stone-400">{stall.org} · {stall.hours}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={(event) => { event.stopPropagation(); onDetail(stall.id) }}
+                  className="shrink-0 rounded-full bg-fest px-3 py-2 text-[10px] font-black text-white active:scale-90"
+                  aria-label={`${stall.name}の詳細を見る`}
+                >
+                  詳細
+                </button>
+              </div>
+            </article>
+          )
+        })}
+      </div>
+    </section>
   )
 }
 
@@ -205,11 +366,7 @@ function FilterChip({ label, active, color, onClick }) {
       type="button"
       onClick={onClick}
       className="shrink-0 rounded-full px-3.5 py-1.5 text-xs font-bold shadow-sm transition-all active:scale-90"
-      style={
-        active
-          ? { background: color, color: '#fff' }
-          : { background: 'rgba(255,255,255,0.9)', color: '#6b6255' }
-      }
+      style={active ? { background: color, color: '#fff' } : { background: 'rgba(255,255,255,0.9)', color: '#6b6255' }}
     >
       {label}
     </button>

@@ -18,6 +18,18 @@ export default function StallList() {
     })
   }, [query, filter])
 
+  const groups = useMemo(() => {
+    const definitions = [
+      { id: 'outdoor', label: '屋外・グラウンド', emoji: '🌳', matches: (stall) => stall.loc.type === 'out' },
+      { id: 'honkan', label: '中央校舎', emoji: '🏫', matches: (stall) => stall.loc.building === 'honkan' },
+      { id: 'chugaku', label: '北校舎', emoji: '🏫', matches: (stall) => stall.loc.building === 'chugaku' },
+      { id: 'minami', label: '南校舎', emoji: '🏫', matches: (stall) => stall.loc.building === 'minami' },
+    ]
+    return definitions
+      .map((group) => ({ ...group, stalls: list.filter(group.matches) }))
+      .filter((group) => group.stalls.length > 0)
+  }, [list])
+
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="sticky top-0 z-10 bg-paper/95 px-4 pb-2 pt-3 backdrop-blur">
@@ -46,39 +58,38 @@ export default function StallList() {
 
       <p className="px-4 pt-1 text-[11px] font-bold text-stone-400">{list.length}店みつかりました</p>
 
-      <div className="grid grid-cols-2 gap-3 px-4 pb-6 pt-2 sm:grid-cols-3">
-        {list.map((s, i) => {
-          const cat = CATEGORIES[s.cat]
-          return (
-            <button
-              key={s.id}
-              type="button"
-              onClick={() => openDetail(s.id)}
-              className="fade-up overflow-hidden rounded-2xl bg-white text-left shadow-sm transition-transform active:scale-95"
-              style={{ animationDelay: `${Math.min(i * 0.04, 0.4)}s` }}
-            >
-              <div
-                className="flex h-20 items-center justify-center text-4xl"
-                style={{ background: `linear-gradient(135deg, ${cat.soft}, #fff)` }}
-              >
-                {cat.emoji}
-              </div>
-              <div className="p-3">
-                <div className="flex items-center gap-1.5">
-                  <span
-                    className="rounded-full px-1.5 py-0.5 text-[9px] font-bold text-white"
-                    style={{ background: cat.color }}
+      <div className="space-y-5 px-4 pb-6 pt-2">
+        {groups.map((group) => (
+          <section key={group.id} aria-labelledby={`stall-group-${group.id}`}>
+            <div className="mb-2 flex items-center gap-2 border-b border-orange-100 pb-2">
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-orange-50 text-base">{group.emoji}</span>
+              <h2 id={`stall-group-${group.id}`} className="text-sm font-black text-ink">{group.label}</h2>
+              <span className="ml-auto rounded-full bg-white px-2.5 py-1 text-[10px] font-black text-stone-400">{group.stalls.length}店</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {group.stalls.map((s, index) => {
+                const cat = CATEGORIES[s.cat]
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => openDetail(s.id)}
+                    className="fade-up overflow-hidden rounded-2xl bg-white text-left shadow-sm transition-transform active:scale-95"
+                    style={{ animationDelay: `${Math.min(index * 0.04, 0.3)}s` }}
                   >
-                    {cat.label}
-                  </span>
-                </div>
-                <h3 className="mt-1 line-clamp-1 text-sm font-black text-ink">{s.name}</h3>
-                <p className="mt-0.5 line-clamp-1 text-[11px] text-stone-500">{s.org}</p>
-                <p className="line-clamp-1 text-[11px] text-stone-400">📍 {s.placeLabel}</p>
-              </div>
-            </button>
-          )
-        })}
+                    <div className="flex h-20 items-center justify-center text-4xl" style={{ background: `linear-gradient(135deg, ${cat.soft}, #fff)` }}>{cat.emoji}</div>
+                    <div className="p-3">
+                      <span className="rounded-full px-1.5 py-0.5 text-[9px] font-bold text-white" style={{ background: cat.color }}>{cat.label}</span>
+                      <h3 className="mt-1 line-clamp-1 text-sm font-black text-ink">{s.name}</h3>
+                      <p className="mt-0.5 line-clamp-1 text-[11px] text-stone-500">{s.org}</p>
+                      <p className="line-clamp-1 text-[11px] text-stone-400">📍 {s.placeLabel}</p>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </section>
+        ))}
       </div>
 
       {list.length === 0 && (

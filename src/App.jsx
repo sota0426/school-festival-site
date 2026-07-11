@@ -9,7 +9,7 @@ import MapView from './components/map/MapView'
 import StallList from './components/stalls/StallList'
 import StallDetail from './components/stalls/StallDetail'
 import Timetable from './components/Timetable'
-import Access from './components/Access'
+import More from './components/More'
 
 export default function App() {
   // splash → survey → app(アンケート回答済みなら直接app)
@@ -62,8 +62,8 @@ export default function App() {
         <Section active={tab === 'timetable'}>
           <Timetable />
         </Section>
-        <Section active={tab === 'access'}>
-          <Access />
+        <Section active={tab === 'more'}>
+          <More />
         </Section>
       </main>
 

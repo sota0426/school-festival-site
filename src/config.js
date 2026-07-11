@@ -7,6 +7,8 @@ export const FESTIVAL = {
   openHours: '9:00〜16:00',
   // Google Apps Script WebアプリのURL。空ならアンケート送信はスキップ(ローカル保存のみ)
   gasUrl: '',
+  // 公式Instagramが決まったら、このURLをアカウントURLへ変更してください。
+  instagramUrl: 'https://www.instagram.com/',
 }
 
 export function isFestivalDay(d = new Date()) {

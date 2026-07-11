@@ -1,10 +1,10 @@
-import { MapIcon, StallIcon, ClockIcon, CarIcon } from './Icons'
+import { MapIcon, StallIcon, ClockIcon, MoreIcon } from './Icons'
 
 const TABS = [
   { id: 'map', label: 'マップ', Icon: MapIcon },
   { id: 'stalls', label: '模擬店', Icon: StallIcon },
   { id: 'timetable', label: 'タイム\nテーブル', short: '時間割', Icon: ClockIcon },
-  { id: 'access', label: 'アクセス', Icon: CarIcon },
+  { id: 'more', label: 'その他', Icon: MoreIcon },
 ]
 
 export default function TabBar({ tab, onChange }) {
