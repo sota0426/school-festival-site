@@ -130,7 +130,7 @@ function BuildingGuide({ selectedBuilding }) {
       </div>
       <div className="mt-3 overflow-hidden rounded-xl border border-stone-200 bg-[#faf7ef]">
         <img
-          src="/images/campus-building-guide-dummy.png"
+          src={`${import.meta.env.BASE_URL}images/campus-building-guide-dummy.png`}
           alt="生徒玄関から南校舎、中央校舎、職員室を経由した北校舎への矢印付き案内図"
           className="h-auto w-full"
         />

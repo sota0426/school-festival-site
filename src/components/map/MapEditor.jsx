@@ -28,7 +28,7 @@ export default function MapEditor({ onClose }) {
   useEffect(() => {
     let active = true
     imageFromDb(mapKey).then((value) => {
-      if (active) setImageUrl(value || (mapKey === 'campus' ? '/images/campus-building-guide-dummy.png' : null))
+      if (active) setImageUrl(value || (mapKey === 'campus' ? `${import.meta.env.BASE_URL}images/campus-building-guide-dummy.png` : null))
     })
     return () => { active = false }
   }, [mapKey])

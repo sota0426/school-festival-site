@@ -1,16 +1,40 @@
-# React + Vite
+# 鶴東祭 2026 公式サイト
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+文化祭来場者向けの校内マップ、模擬店一覧、タイムテーブル、アクセス・企画情報を提供するReact/Vite製サイトです。
 
-Currently, two official plugins are available:
+## ローカル起動
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+npm install
+npm run dev
+```
 
-## React Compiler
+## 確認
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+npm run lint
+npm run build
+```
 
-## Expanding the Oxlint configuration
+## GitHub Pagesへの公開
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+`main`ブランチへpushすると、`.github/workflows/deploy-pages.yml` が自動的にビルドと公開を行います。
+
+初回のみGitHubリポジトリで次を設定してください。
+
+1. `Settings`を開く
+2. `Pages`を開く
+3. `Build and deployment`の`Source`を`GitHub Actions`に変更
+4. `main`へpushするか、`Actions`の`Deploy to GitHub Pages`から手動実行
+
+公開URL:
+
+```text
+https://sota0426.github.io/school-festival-site/
+```
+
+リポジトリ名を変更した場合は、`vite.config.js`の`/school-festival-site/`も新しいリポジトリ名へ変更してください。
+
+## Instagram設定
+
+公式InstagramのURLは `src/config.js` の `instagramUrl` で設定します。

@@ -173,7 +173,7 @@ export default function MapView({ mapTarget }) {
             校舎全体
           </div>
           <CustomMapImage
-            image={customMaps.images[CAMPUS_KEY] || '/images/campus-building-guide-dummy.png'}
+            image={customMaps.images[CAMPUS_KEY] || `${import.meta.env.BASE_URL}images/campus-building-guide-dummy.png`}
             annotations={customMaps.annotations[CAMPUS_KEY]}
             label="校舎全体"
           />
