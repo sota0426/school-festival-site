@@ -40,6 +40,11 @@ export default function MapView({ mapTarget }) {
 
   const visibleStalls = STALLS.filter((stall) => !filter || stall.cat === filter)
   const activeSection = floorSections.find((section) => section.key === activeKey)
+  const currentMap = activeSection
+    ? { eyebrow: 'フロアマップ', title: activeSection.plan.name, floor: activeSection.floor.label }
+    : activeKey === CAMPUS_KEY
+      ? { eyebrow: '校舎案内', title: '校舎全体', floor: null }
+      : { eyebrow: 'キャンパスマップ', title: '敷地内全体', floor: null }
 
   const reloadCustomMaps = async () => {
     const keys = [GROUNDS_KEY, CAMPUS_KEY, ...floorSections.map((section) => section.key)]
@@ -126,6 +131,42 @@ export default function MapView({ mapTarget }) {
         ))}
       </div>
 
+      <div className="pointer-events-none absolute inset-x-3 top-[4.25rem] z-40">
+        <div
+          className="pointer-events-auto mx-auto flex max-w-xl items-center gap-3 rounded-2xl border border-white/80 bg-white/95 p-2.5 shadow-lg shadow-stone-500/15 backdrop-blur-md"
+          aria-live="polite"
+          aria-label={`表示中：${currentMap.title}${currentMap.floor ? ` ${currentMap.floor}` : ''}`}
+        >
+          <div className="min-w-0 flex-1">
+            <p className="text-[9px] font-black tracking-[0.16em] text-fest">{currentMap.eyebrow}</p>
+            <h2 className="truncate text-base font-black leading-tight text-ink">{currentMap.title}</h2>
+          </div>
+          {currentMap.floor && (
+            <span className="grid h-11 min-w-14 shrink-0 place-items-center rounded-xl bg-ink px-3 text-xl font-black text-white shadow-sm">
+              {currentMap.floor}
+            </span>
+          )}
+          {activeKey !== GROUNDS_KEY && (
+            <button
+              type="button"
+              onClick={() => scrollToSection(GROUNDS_KEY)}
+              className="shrink-0 rounded-xl bg-stone-100 px-2.5 py-2 text-[10px] font-black text-stone-600 transition-transform active:scale-90"
+              aria-label="敷地内全体マップへ戻る"
+            >
+              ↑ 全体へ
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setEditorOpen(true)}
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-stone-100 text-sm transition-transform active:scale-90"
+            aria-label="マップを編集"
+          >
+            ✏️
+          </button>
+        </div>
+      </div>
+
       <div
         ref={scroller}
         onScroll={handlePageScroll}
@@ -134,12 +175,9 @@ export default function MapView({ mapTarget }) {
       >
         <section
           data-map-section={GROUNDS_KEY}
-          className="relative flex h-full min-h-full snap-start snap-always items-center justify-center px-1 pb-32 pt-16"
+          className="relative flex h-full min-h-full snap-start snap-always items-center justify-center px-1 pb-32 pt-28"
           aria-label="敷地内全体マップ"
         >
-          <div className="absolute left-4 top-16 z-10 rounded-full bg-ink px-4 py-2 text-xs font-black text-white shadow-md">
-            敷地内全体
-          </div>
           {customMaps.images[GROUNDS_KEY] ? (
             <CustomMapImage image={customMaps.images[GROUNDS_KEY]} annotations={customMaps.annotations[GROUNDS_KEY]} label="敷地内全体" />
           ) : (
@@ -166,12 +204,9 @@ export default function MapView({ mapTarget }) {
 
         <section
           data-map-section={CAMPUS_KEY}
-          className="relative flex h-full min-h-full snap-start snap-always items-center justify-center px-2 pb-32 pt-20"
+          className="relative flex h-full min-h-full snap-start snap-always items-center justify-center px-2 pb-32 pt-28"
           aria-label="校舎全体マップ"
         >
-          <div className="absolute left-4 top-16 z-10 rounded-full bg-ink px-4 py-2 text-xs font-black text-white shadow-md">
-            校舎全体
-          </div>
           <CustomMapImage
             image={customMaps.images[CAMPUS_KEY] || `${import.meta.env.BASE_URL}images/campus-building-guide-dummy.png`}
             annotations={customMaps.annotations[CAMPUS_KEY]}
@@ -189,17 +224,9 @@ export default function MapView({ mapTarget }) {
             <section
               key={key}
               data-map-section={key}
-              className="relative flex h-full min-h-full snap-start snap-always flex-col items-center justify-center px-2 pb-32 pt-20"
+              className="relative flex h-full min-h-full snap-start snap-always flex-col items-center justify-center px-2 pb-32 pt-28"
               aria-label={`${plan.name} ${floor.label}`}
             >
-              <div className="absolute inset-x-4 top-16 z-10 flex items-center justify-between">
-                <span className="rounded-full bg-ink px-4 py-2 text-xs font-black text-white shadow-md">
-                  {plan.name} · {floor.label}
-                </span>
-                <span className="rounded-full bg-white/90 px-3 py-2 text-[10px] font-bold text-stone-500 shadow-sm">
-                  {index + 1} / {floorSections.length}
-                </span>
-              </div>
               {customMaps.images[key] ? (
                 <CustomMapImage image={customMaps.images[key]} annotations={customMaps.annotations[key]} label={`${plan.name} ${floor.label}`} />
               ) : (
@@ -224,26 +251,6 @@ export default function MapView({ mapTarget }) {
           )
         })}
       </div>
-
-      <div className="pointer-events-none absolute inset-x-0 top-14 z-30 flex justify-center">
-        <button
-          type="button"
-          onClick={() => scrollToSection(GROUNDS_KEY)}
-          className="pointer-events-auto rounded-full bg-white/90 px-3 py-1.5 text-[10px] font-black text-stone-500 shadow-sm backdrop-blur active:scale-90"
-        >
-          {activeSection
-            ? `${activeSection.plan.name} ${activeSection.floor.label}　↑ 敷地内全体へ`
-            : activeKey === CAMPUS_KEY ? '校舎全体　↑ 敷地内全体へ' : '敷地内全体マップ'}
-        </button>
-      </div>
-
-      <button
-        type="button"
-        onClick={() => setEditorOpen(true)}
-        className="absolute right-3 top-14 z-40 rounded-full bg-ink px-3 py-2 text-[10px] font-black text-white shadow-md active:scale-90"
-      >
-        ✏️ マップ編集
-      </button>
 
       <div className="absolute inset-x-0 bottom-0 z-30">
         <StallCarousel

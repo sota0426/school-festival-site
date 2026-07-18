@@ -1,13 +1,17 @@
 import { stallById } from '../../data/stalls'
-import { CATEGORIES } from '../../data/categories'
+import { CATEGORIES, FOOD_GENRES } from '../../data/categories'
 import { useApp } from '../../lib/AppContext'
 import { CloseIcon, PinIcon, ClockIcon } from '../Icons'
+import StallPoster from './StallPoster'
 
 export default function StallDetail({ stallId }) {
   const { closeDetail, showOnMap } = useApp()
   const stall = stallById(stallId)
   if (!stall) return null
   const cat = CATEGORIES[stall.cat]
+  const genre = stall.foodGenre ? FOOD_GENRES[stall.foodGenre] : null
+  const hasPoster = Boolean(typeof stall.poster === 'string' ? stall.poster : stall.poster?.src)
+  const stallWithFallback = { ...stall, posterFallback: cat.emoji }
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col justify-end">
@@ -17,8 +21,19 @@ export default function StallDetail({ stallId }) {
         onClick={closeDetail}
         className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
       />
-      <div className="fade-up relative z-10 mx-auto flex max-h-[88dvh] w-full max-w-xl flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl">
-        {/* ヒーロー */}
+      <div
+        className="fade-up relative z-10 mx-auto flex max-h-[88dvh] w-full max-w-xl flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl"
+        style={{ '--poster-soft': cat.soft }}
+      >
+        {hasPoster && (
+          <StallPoster
+            stall={stallWithFallback}
+            eager
+            className="h-[min(42dvh,360px)] w-full shrink-0 border-b border-stone-100"
+          />
+        )}
+
+        {/* 店舗情報 */}
         <div
           className="relative shrink-0 px-6 pb-5 pt-6"
           style={{ background: `linear-gradient(135deg, ${cat.soft}, #fff8f0)` }}
@@ -31,14 +46,19 @@ export default function StallDetail({ stallId }) {
           >
             <CloseIcon width="18" height="18" />
           </button>
-          <span className="pop-in inline-block text-5xl">{cat.emoji}</span>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
+          {!hasPoster && <span className="pop-in inline-block text-5xl">{cat.emoji}</span>}
+          <div className={`${hasPoster ? '' : 'mt-2'} flex flex-wrap items-center gap-2`}>
             <span
               className="rounded-full px-2.5 py-1 text-[10px] font-bold text-white"
               style={{ background: cat.color }}
             >
               {cat.label}
             </span>
+            {genre && (
+              <span className="rounded-full bg-white/80 px-2.5 py-1 text-[10px] font-bold text-orange-700">
+                {genre.emoji} {genre.label}
+              </span>
+            )}
             <span className="rounded-full bg-white/80 px-2.5 py-1 text-[10px] font-bold text-stone-500">
               {stall.org}
             </span>

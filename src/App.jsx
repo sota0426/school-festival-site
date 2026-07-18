@@ -8,7 +8,7 @@ import TabBar from './components/TabBar'
 import MapView from './components/map/MapView'
 import StallList from './components/stalls/StallList'
 import StallDetail from './components/stalls/StallDetail'
-import Timetable from './components/Timetable'
+import Events from './components/Events'
 import More from './components/More'
 
 export default function App() {
@@ -59,8 +59,8 @@ export default function App() {
         <Section active={tab === 'stalls'}>
           <StallList />
         </Section>
-        <Section active={tab === 'timetable'}>
-          <Timetable />
+        <Section active={tab === 'events'}>
+          <Events />
         </Section>
         <Section active={tab === 'more'}>
           <More />

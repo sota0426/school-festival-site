@@ -23,7 +23,6 @@ export const BUILDINGS = [
   { id: 'g1', num: 12, name: '第1グラウンド', kind: 'ground', x: 256, y: 396, w: 252, h: 212, round: 30 },
   { id: 'pool', num: 15, name: '50mプール', kind: 'pool', x: 76, y: 446, w: 76, h: 136 },
   { id: 'bus', num: 16, name: 'スクールバス乗降場', kind: 'infra', x: 330, y: 628, w: 182, h: 40 },
-  { id: 'parking', num: null, name: '臨時駐車場', kind: 'infra', x: 58, y: 602, w: 224, h: 72 },
 ]
 
 export const KIND_STYLE = {

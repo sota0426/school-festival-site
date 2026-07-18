@@ -1,22 +1,49 @@
 import { useMemo, useState } from 'react'
 import { STALLS } from '../../data/stalls'
-import { CATEGORIES, CATEGORY_IDS } from '../../data/categories'
+import { CATEGORIES, CATEGORY_IDS, FOOD_GENRES, FOOD_GENRE_IDS } from '../../data/categories'
 import { useApp } from '../../lib/AppContext'
 import { SearchIcon } from '../Icons'
+import StallPoster from './StallPoster'
+
+const ORGANIZATIONS = [...new Set(STALLS.map((stall) => stall.org))]
 
 export default function StallList() {
   const { openDetail } = useApp()
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState(null)
+  const [foodGenre, setFoodGenre] = useState(null)
+  const [organization, setOrganization] = useState('')
+  const [organizationMode, setOrganizationMode] = useState(false)
 
   const list = useMemo(() => {
     const q = query.trim().toLowerCase()
     return STALLS.filter((s) => {
       if (filter && s.cat !== filter) return false
+      if (foodGenre && s.foodGenre !== foodGenre) return false
+      if (organization && s.org !== organization) return false
       if (!q) return true
-      return [s.name, s.org, s.placeLabel, s.pr].join(' ').toLowerCase().includes(q)
+      const menuText = s.menu.map(([item]) => item).join(' ')
+      const genreText = s.foodGenre ? FOOD_GENRES[s.foodGenre]?.label ?? '' : ''
+      return [s.name, s.org, s.placeLabel, s.pr, menuText, genreText]
+        .join(' ')
+        .toLowerCase()
+        .includes(q)
     })
-  }, [query, filter])
+  }, [query, filter, foodGenre, organization])
+
+  const selectCategory = (id) => {
+    const nextFilter = filter === id ? null : id
+    setFilter(nextFilter)
+    setOrganization('')
+    setOrganizationMode(false)
+    if (nextFilter !== 'food') setFoodGenre(null)
+  }
+
+  const selectOrganizationMode = () => {
+    setFilter(null)
+    setFoodGenre(null)
+    setOrganizationMode(true)
+  }
 
   const groups = useMemo(() => {
     const definitions = [
@@ -38,22 +65,67 @@ export default function StallList() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="お店・団体・場所をさがす"
+            placeholder="店名・メニュー・クラスをさがす"
             className="w-full bg-transparent text-sm font-bold text-ink outline-none placeholder:text-stone-400"
           />
         </div>
         <div className="mt-2 flex gap-2 overflow-x-auto [scrollbar-width:none]">
-          <Chip label="すべて" active={!filter} color="#6b6255" onClick={() => setFilter(null)} />
+          <Chip
+            label="すべて"
+            active={!filter && !organizationMode}
+            color="#6b6255"
+            onClick={() => {
+              setFilter(null)
+              setFoodGenre(null)
+              setOrganization('')
+              setOrganizationMode(false)
+            }}
+          />
           {CATEGORY_IDS.map((id) => (
             <Chip
               key={id}
               label={`${CATEGORIES[id].emoji} ${CATEGORIES[id].label}`}
               active={filter === id}
               color={CATEGORIES[id].color}
-              onClick={() => setFilter(filter === id ? null : id)}
+              onClick={() => selectCategory(id)}
             />
           ))}
+          <Chip
+            label="👥 クラス・団体"
+            active={organizationMode}
+            color="#4f766b"
+            onClick={selectOrganizationMode}
+          />
         </div>
+        {filter === 'food' && (
+          <div className="mt-2 flex gap-2 overflow-x-auto [scrollbar-width:none]" aria-label="フードジャンル">
+            <Chip label="フードすべて" active={!foodGenre} color="#d65b26" onClick={() => setFoodGenre(null)} />
+            {FOOD_GENRE_IDS.map((id) => (
+              <Chip
+                key={id}
+                label={`${FOOD_GENRES[id].emoji} ${FOOD_GENRES[id].label}`}
+                active={foodGenre === id}
+                color="#d65b26"
+                onClick={() => setFoodGenre(foodGenre === id ? null : id)}
+              />
+            ))}
+          </div>
+        )}
+        {organizationMode && (
+          <label className="mt-2 flex items-center gap-2 rounded-xl border border-emerald-100 bg-white px-3 py-2 shadow-sm">
+            <span className="text-base" aria-hidden="true">👥</span>
+            <span className="shrink-0 text-[11px] font-black text-stone-500">絞り込む団体</span>
+            <select
+              value={organization}
+              onChange={(event) => setOrganization(event.target.value)}
+              className="min-w-0 flex-1 bg-transparent text-xs font-black text-ink outline-none"
+              aria-label="クラス・団体で絞り込む"
+            >
+              <option value="">選択してください</option>
+              {ORGANIZATIONS.map((org) => <option key={org} value={org}>{org}</option>)}
+            </select>
+          </label>
+        )}
       </div>
 
       <p className="px-4 pt-1 text-[11px] font-bold text-stone-400">{list.length}店みつかりました</p>
@@ -66,23 +138,32 @@ export default function StallList() {
               <h2 id={`stall-group-${group.id}`} className="text-sm font-black text-ink">{group.label}</h2>
               <span className="ml-auto rounded-full bg-white px-2.5 py-1 text-[10px] font-black text-stone-400">{group.stalls.length}店</span>
             </div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {group.stalls.map((s, index) => {
                 const cat = CATEGORIES[s.cat]
+                const genre = s.foodGenre ? FOOD_GENRES[s.foodGenre] : null
+                const stall = { ...s, posterFallback: cat.emoji }
                 return (
                   <button
                     key={s.id}
                     type="button"
                     onClick={() => openDetail(s.id)}
-                    className="fade-up overflow-hidden rounded-2xl bg-white text-left shadow-sm transition-transform active:scale-95"
-                    style={{ animationDelay: `${Math.min(index * 0.04, 0.3)}s` }}
+                    className="fade-up group overflow-hidden rounded-2xl bg-white text-left shadow-sm ring-1 ring-stone-900/5 transition-all active:scale-[0.98]"
+                    style={{ animationDelay: `${Math.min(index * 0.04, 0.3)}s`, '--poster-soft': cat.soft }}
                   >
-                    <div className="flex h-20 items-center justify-center text-4xl" style={{ background: `linear-gradient(135deg, ${cat.soft}, #fff)` }}>{cat.emoji}</div>
-                    <div className="p-3">
-                      <span className="rounded-full px-1.5 py-0.5 text-[9px] font-bold text-white" style={{ background: cat.color }}>{cat.label}</span>
-                      <h3 className="mt-1 line-clamp-1 text-sm font-black text-ink">{s.name}</h3>
-                      <p className="mt-0.5 line-clamp-1 text-[11px] text-stone-500">{s.org}</p>
-                      <p className="line-clamp-1 text-[11px] text-stone-400">📍 {s.placeLabel}</p>
+                    <StallPoster stall={stall} className="aspect-[297/210] w-full border-b border-stone-100" />
+                    <div className="p-3.5">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="rounded-full px-2 py-0.5 text-[9px] font-bold text-white" style={{ background: cat.color }}>{cat.label}</span>
+                        {genre && (
+                          <span className="rounded-full bg-orange-50 px-2 py-0.5 text-[9px] font-bold text-orange-700">
+                            {genre.emoji} {genre.label}
+                          </span>
+                        )}
+                        <span className="line-clamp-1 text-[11px] font-bold text-stone-400">{s.org}</span>
+                      </div>
+                      <h3 className="mt-1.5 text-base font-black leading-snug text-ink">{s.name}</h3>
+                      <p className="mt-1 line-clamp-1 text-xs text-stone-500">📍 {s.placeLabel}</p>
                     </div>
                   </button>
                 )

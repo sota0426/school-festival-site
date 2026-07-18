@@ -8,7 +8,19 @@ export const FESTIVAL = {
   // Google Apps Script WebアプリのURL。空ならアンケート送信はスキップ(ローカル保存のみ)
   gasUrl: '',
   // 公式Instagramが決まったら、このURLをアカウントURLへ変更してください。
-  instagramUrl: 'https://www.instagram.com/',
+  instagramUrl: 'https://www.instagram.com/tsuruoka_higashi/',
+}
+
+export const PARKING = {
+  name: '切添グラウンド',
+  address: '〒997-0022 山形県鶴岡市切添町10',
+  latitude: 38.732017,
+  longitude: 139.843653,
+  googleMapUrl: 'https://www.google.com/maps/search/?api=1&query=38.732017%2C139.843653',
+  googleEmbedUrl: 'https://www.google.com/maps?q=38.732017%2C139.843653&z=17&output=embed',
+  androidMapUrl: 'geo:0,0?q=38.732017%2C139.843653(%E5%88%87%E6%B7%BB%E3%82%B0%E3%83%A9%E3%82%A6%E3%83%B3%E3%83%89)',
+  appleMapUrl: 'https://maps.apple.com/?ll=38.732017%2C139.843653&q=%E5%88%87%E6%B7%BB%E3%82%B0%E3%83%A9%E3%82%A6%E3%83%B3%E3%83%89',
+  streetViewUrl: 'https://maps.app.goo.gl/stj5BevyDW4JtWof8',
 }
 
 export function isFestivalDay(d = new Date()) {

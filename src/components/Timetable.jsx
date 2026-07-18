@@ -24,11 +24,11 @@ function statusOf(ev, minutes, festivalDay) {
   return 'upcoming'
 }
 
-export default function Timetable() {
+export default function Timetable({ className = 'flex-1 overflow-y-auto px-4 pb-6' }) {
   const { minutes, festivalDay } = useNowMinutes()
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 pb-6">
+    <div className={className}>
       <div className="fade-up mt-3 rounded-2xl bg-gradient-to-r from-fest to-fest2 px-5 py-4 text-white shadow-md">
         <p className="text-xs font-bold opacity-90">イベントタイムテーブル</p>
         <p className="text-lg font-black">

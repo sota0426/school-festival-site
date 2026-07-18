@@ -86,11 +86,6 @@ export default function CampusMap({ scale, filter, selectedStallId, onPinTap, on
             >
               {b.name}
             </text>
-            {b.id === 'parking' && (
-              <text x={cx - 82} y={cy} textAnchor="middle" dominantBaseline="central" fontSize="22" fontWeight="900" fill="#2f7de1">
-                P
-              </text>
-            )}
           </g>
         )
       })}

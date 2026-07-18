@@ -3,7 +3,7 @@ import { MapIcon, StallIcon, ClockIcon, MoreIcon } from './Icons'
 const TABS = [
   { id: 'map', label: 'マップ', Icon: MapIcon },
   { id: 'stalls', label: '模擬店', Icon: StallIcon },
-  { id: 'timetable', label: 'タイム\nテーブル', short: '時間割', Icon: ClockIcon },
+  { id: 'events', label: 'イベント', Icon: ClockIcon },
   { id: 'more', label: 'その他', Icon: MoreIcon },
 ]
 
@@ -11,7 +11,7 @@ export default function TabBar({ tab, onChange }) {
   return (
     <nav className="shrink-0 border-t border-orange-100 bg-white/90 backdrop-blur pb-[env(safe-area-inset-bottom)]">
       <div className="mx-auto flex max-w-xl">
-        {TABS.map(({ id, label, short, Icon }) => {
+        {TABS.map(({ id, label, Icon }) => {
           const active = tab === id
           return (
             <button
@@ -35,7 +35,7 @@ export default function TabBar({ tab, onChange }) {
                   active ? 'text-fest' : 'text-stone-400'
                 }`}
               >
-                {short || label}
+                {label}
               </span>
             </button>
           )
