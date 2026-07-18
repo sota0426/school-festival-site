@@ -1,11 +1,12 @@
 import { stallById } from '../../data/stalls'
 import { CATEGORIES, FOOD_GENRES } from '../../data/categories'
 import { useApp } from '../../lib/AppContext'
-import { CloseIcon, PinIcon, ClockIcon } from '../Icons'
+import { CloseIcon, PinIcon } from '../Icons'
 import StallPoster from './StallPoster'
+import StallLocationGuide from './StallLocationGuide'
 
 export default function StallDetail({ stallId }) {
-  const { closeDetail, showOnMap } = useApp()
+  const { closeDetail } = useApp()
   const stall = stallById(stallId)
   if (!stall) return null
   const cat = CATEGORIES[stall.cat]
@@ -22,7 +23,7 @@ export default function StallDetail({ stallId }) {
         className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
       />
       <div
-        className="fade-up relative z-10 mx-auto flex max-h-[88dvh] w-full max-w-xl flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl"
+        className="fade-up relative z-10 mx-auto max-h-[96dvh] w-full max-w-xl overflow-y-auto rounded-t-3xl bg-white shadow-2xl"
         style={{ '--poster-soft': cat.soft }}
       >
         {hasPoster && (
@@ -68,10 +69,9 @@ export default function StallDetail({ stallId }) {
         </div>
 
         {/* 本文 */}
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
+        <div className="px-6 py-4 pb-[max(24px,env(safe-area-inset-bottom))]">
           <div className="space-y-2.5">
             <InfoRow icon={<PinIcon width="16" height="16" />} label="場所" value={stall.placeLabel} />
-            <InfoRow icon={<ClockIcon width="16" height="16" />} label="営業時間" value={stall.hours} />
           </div>
 
           {stall.menu.length > 0 && (
@@ -89,17 +89,7 @@ export default function StallDetail({ stallId }) {
               </ul>
             </div>
           )}
-        </div>
-
-        {/* フッター */}
-        <div className="shrink-0 border-t border-orange-100 bg-white px-6 py-3 pb-[max(12px,env(safe-area-inset-bottom))]">
-          <button
-            type="button"
-            onClick={() => showOnMap({ type: 'stall', id: stall.id })}
-            className="w-full rounded-full bg-gradient-to-r from-fest to-fest2 py-3.5 text-base font-black text-white shadow-lg shadow-orange-200 transition-transform active:scale-95"
-          >
-            🗺 マップで場所を見る
-          </button>
+          <StallLocationGuide stall={stall} />
         </div>
       </div>
     </div>

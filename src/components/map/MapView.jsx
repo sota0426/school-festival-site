@@ -22,7 +22,6 @@ export default function MapView({ mapTarget }) {
   const [editorOpen, setEditorOpen] = useState(false)
   const [customMaps, setCustomMaps] = useState({ annotations: {}, images: {} })
   const scroller = useRef(null)
-  const scrollTimer = useRef(null)
 
   const floorSections = useMemo(
     () => BUILDINGS.flatMap((building) => {
@@ -63,8 +62,6 @@ export default function MapView({ mapTarget }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  useEffect(() => () => clearTimeout(scrollTimer.current), [])
-
   const scrollToSection = (key, behavior = 'smooth') => {
     const target = scroller.current?.querySelector(`[data-map-section="${key}"]`)
     if (!target || !scroller.current) return
@@ -98,22 +95,10 @@ export default function MapView({ mapTarget }) {
   }, [mapTarget])
 
   const handlePageScroll = (event) => {
-    clearTimeout(scrollTimer.current)
-    scrollTimer.current = setTimeout(() => {
-      const container = event.currentTarget
-      const center = container.scrollTop + container.clientHeight / 2
-      let closest = null
-      let distance = Infinity
-      for (const section of container.children) {
-        const nextDistance = Math.abs(section.offsetTop + section.offsetHeight / 2 - center)
-        if (nextDistance < distance) {
-          distance = nextDistance
-          closest = section
-        }
-      }
-      const key = closest?.dataset.mapSection
-      if (key) setActiveKey(key)
-    }, 80)
+    const container = event.currentTarget
+    const sectionIndex = Math.round(container.scrollTop / container.clientHeight)
+    const key = container.children[sectionIndex]?.dataset.mapSection
+    if (key) setActiveKey(key)
   }
 
   return (
@@ -138,8 +123,8 @@ export default function MapView({ mapTarget }) {
           aria-label={`表示中：${currentMap.title}${currentMap.floor ? ` ${currentMap.floor}` : ''}`}
         >
           <div className="min-w-0 flex-1">
-            <p className="text-[9px] font-black tracking-[0.16em] text-fest">{currentMap.eyebrow}</p>
-            <h2 className="truncate text-base font-black leading-tight text-ink">{currentMap.title}</h2>
+            <p className="text-[9px] font-black tracking-[0.16em] text-fest">現在表示中 · {currentMap.eyebrow}</p>
+            <h2 className="truncate text-lg font-black leading-tight text-ink">{currentMap.title}</h2>
           </div>
           {currentMap.floor && (
             <span className="grid h-11 min-w-14 shrink-0 place-items-center rounded-xl bg-ink px-3 text-xl font-black text-white shadow-sm">
@@ -156,16 +141,17 @@ export default function MapView({ mapTarget }) {
               ↑ 全体へ
             </button>
           )}
-          <button
-            type="button"
-            onClick={() => setEditorOpen(true)}
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-stone-100 text-sm transition-transform active:scale-90"
-            aria-label="マップを編集"
-          >
-            ✏️
-          </button>
         </div>
       </div>
+
+      <button
+        type="button"
+        onClick={() => setEditorOpen(true)}
+        className="absolute bottom-[7.25rem] right-1.5 z-40 rounded-lg bg-black/45 px-2 py-1 text-[8px] font-black text-white/90 backdrop-blur-sm transition-transform active:scale-90"
+        aria-label="開発用マップ編集"
+      >
+        DEV · 編集 ✎
+      </button>
 
       <div
         ref={scroller}
@@ -186,6 +172,7 @@ export default function MapView({ mapTarget }) {
                 scale={1}
                 filter={filter}
                 selectedStallId={focusedStallId}
+                animationKey={activeKey === GROUNDS_KEY ? activeKey : 'inactive'}
                 onPinTap={(stall) => showStallOnMap(stall, true)}
                 onBuildingTap={(building) => {
                   const firstFloor = FLOOR_PLANS[building.id]?.floors[0]
@@ -197,9 +184,7 @@ export default function MapView({ mapTarget }) {
               />
             </svg>
           )}
-          <p className="pointer-events-none absolute bottom-32 rounded-full bg-white/90 px-4 py-2 text-[11px] font-black text-stone-500 shadow-sm">
-            ↓ 下へスクロールして校舎全体を見る
-          </p>
+          <ScrollHint text="下へスクロール" destination="校舎全体の案内へ" />
         </section>
 
         <section
@@ -212,9 +197,7 @@ export default function MapView({ mapTarget }) {
             annotations={customMaps.annotations[CAMPUS_KEY]}
             label="校舎全体"
           />
-          <p className="pointer-events-none absolute bottom-32 rounded-full bg-white/90 px-4 py-2 text-[11px] font-black text-stone-500 shadow-sm">
-            ↓ 下へスクロールして各校舎のフロアを見る
-          </p>
+          <ScrollHint text="そのまま下へスクロール" destination="各校舎のフロアへ" />
         </section>
 
         {floorSections.map((section, index) => {
@@ -240,13 +223,16 @@ export default function MapView({ mapTarget }) {
                     floorId={floor.id}
                     filter={filter}
                     selectedStallId={activeKey === key ? focusedStallId : null}
+                    animationKey={activeKey === key ? key : 'inactive'}
                     onPinTap={(stall) => showStallOnMap(stall, true)}
                   />
                 </svg>
               )}
-              <p className="pointer-events-none absolute bottom-32 rounded-full bg-white/85 px-4 py-1.5 text-[10px] font-bold text-stone-400">
-                {next ? `↓ ${next.plan.name} · ${next.floor.label}` : 'すべてのフロアを表示しました'}
-              </p>
+              {next ? (
+                <ScrollHint text="下へスクロールして移動" destination={`${next.plan.name} · ${next.floor.label}`} />
+              ) : (
+                <p className="pointer-events-none absolute bottom-32 rounded-full bg-white/90 px-4 py-2 text-[10px] font-black text-stone-500 shadow-sm">すべてのフロアを表示しました</p>
+              )}
             </section>
           )
         })}
@@ -281,6 +267,18 @@ function CustomMapImage({ image, annotations = [], label }) {
           {item.name}
         </div>
       ))}
+    </div>
+  )
+}
+
+function ScrollHint({ text, destination }) {
+  return (
+    <div className="pointer-events-none absolute bottom-32 flex animate-bounce items-center gap-2 rounded-2xl border border-orange-200 bg-white/95 px-4 py-2.5 text-left shadow-lg shadow-orange-200/60 backdrop-blur-sm">
+      <span className="grid h-8 w-8 place-items-center rounded-full bg-fest text-lg font-black text-white">↓</span>
+      <span>
+        <span className="block text-[10px] font-black text-fest">{text}</span>
+        <span className="block text-xs font-black text-ink">{destination}</span>
+      </span>
     </div>
   )
 }
@@ -348,7 +346,7 @@ function StallCarousel({ stalls, activeId, onActive, onDetail }) {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-black text-ink">{stall.name}</p>
                   <p className="truncate text-[11px] font-bold text-stone-500">📍 {stall.placeLabel}</p>
-                  <p className="truncate text-[10px] text-stone-400">{stall.org} · {stall.hours}</p>
+                  <p className="truncate text-[10px] text-stone-400">{stall.org}</p>
                 </div>
                 <button
                   type="button"

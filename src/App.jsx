@@ -43,9 +43,17 @@ export default function App() {
     <AppContext.Provider value={ctx}>
       {/* ヘッダー */}
       <header className="flex shrink-0 items-center gap-2 border-b border-orange-100 bg-white/90 px-2 py-1.5 backdrop-blur">
-        <h1 className="shrink-0 bg-gradient-to-r from-fest to-fest2 bg-clip-text px-1 text-base font-black text-transparent">
+        <button
+          type="button"
+          onClick={() => {
+            setTab('map')
+            setMapTarget({ type: 'point', ts: Date.now() })
+          }}
+          className="shrink-0 bg-gradient-to-r from-fest to-fest2 bg-clip-text px-1 text-base font-black text-transparent transition-transform active:scale-95"
+          aria-label="鶴東祭 キャンパスマップへ戻る"
+        >
           {FESTIVAL.name}
-        </h1>
+        </button>
         <TabBar tab={tab} onChange={setTab} />
       </header>
 

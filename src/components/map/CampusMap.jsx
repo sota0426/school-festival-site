@@ -10,7 +10,7 @@ const TREES = [
   [60, 440], [60, 480], [430, 120], [330, 120], [560, 590], [740, 590],
 ]
 
-export default function CampusMap({ scale, filter, selectedStallId, onPinTap, onBuildingTap }) {
+export default function CampusMap({ scale, filter, selectedStallId, animationKey, onPinTap, onBuildingTap }) {
   const pins = outdoorStalls().filter((s) => !filter || s.cat === filter)
 
   return (
@@ -124,13 +124,13 @@ export default function CampusMap({ scale, filter, selectedStallId, onPinTap, on
       {/* 屋外模擬店ピン */}
       {pins.map((s, i) => (
         <Pin
-          key={s.id}
+          key={`${s.id}-${animationKey || 'default'}`}
           x={s.loc.x}
           y={s.loc.y}
           color={CATEGORIES[s.cat].color}
           emoji={CATEGORIES[s.cat].emoji}
           selected={selectedStallId === s.id}
-          delay={0.05 * i}
+          delay={0.12 * i}
           onTap={(e) => {
             e.stopPropagation()
             onPinTap(s)

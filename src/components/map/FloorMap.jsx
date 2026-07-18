@@ -3,7 +3,7 @@ import { CATEGORIES } from '../../data/categories'
 import { stallsOnFloor } from '../../data/stalls'
 import Pin from './Pin'
 
-export default function FloorMap({ buildingId, floorId, filter, selectedStallId, onPinTap }) {
+export default function FloorMap({ buildingId, floorId, filter, selectedStallId, animationKey, onPinTap }) {
   const plan = FLOOR_PLANS[buildingId]
   const floor = plan?.floors.find((f) => f.id === floorId)
   if (!floor) return null
@@ -102,13 +102,13 @@ export default function FloorMap({ buildingId, floorId, filter, selectedStallId,
         if (!room) return null
         return (
           <Pin
-            key={s.id}
+            key={`${s.id}-${animationKey || 'default'}`}
             x={room.x + room.w / 2}
             y={room.y + room.h / 2 + 14}
             color={CATEGORIES[s.cat].color}
             emoji={CATEGORIES[s.cat].emoji}
             selected={selectedStallId === s.id}
-            delay={0.06 * i}
+            delay={0.12 * i}
             onTap={(e) => {
               e.stopPropagation()
               onPinTap(s)
