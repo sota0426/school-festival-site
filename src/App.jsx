@@ -42,13 +42,11 @@ export default function App() {
   return (
     <AppContext.Provider value={ctx}>
       {/* ヘッダー */}
-      <header className="flex shrink-0 items-center justify-between border-b border-orange-100 bg-white/90 px-4 py-2.5 backdrop-blur">
-        <h1 className="bg-gradient-to-r from-fest to-fest2 bg-clip-text text-lg font-black text-transparent">
+      <header className="flex shrink-0 items-center gap-2 border-b border-orange-100 bg-white/90 px-2 py-1.5 backdrop-blur">
+        <h1 className="shrink-0 bg-gradient-to-r from-fest to-fest2 bg-clip-text px-1 text-base font-black text-transparent">
           {FESTIVAL.name}
         </h1>
-        <span className="rounded-full bg-orange-50 px-3 py-1 text-[11px] font-black text-fest">
-          {FESTIVAL.dateLabel}
-        </span>
+        <TabBar tab={tab} onChange={setTab} />
       </header>
 
       {/* コンテンツ(タブはすべてマウントしたまま切替=マップの状態を保持) */}
@@ -66,8 +64,6 @@ export default function App() {
           <More />
         </Section>
       </main>
-
-      <TabBar tab={tab} onChange={setTab} />
 
       {detailId && <StallDetail stallId={detailId} />}
     </AppContext.Provider>

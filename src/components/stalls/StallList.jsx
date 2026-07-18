@@ -2,34 +2,25 @@ import { useMemo, useState } from 'react'
 import { STALLS } from '../../data/stalls'
 import { CATEGORIES, CATEGORY_IDS, FOOD_GENRES, FOOD_GENRE_IDS } from '../../data/categories'
 import { useApp } from '../../lib/AppContext'
-import { SearchIcon } from '../Icons'
 import StallPoster from './StallPoster'
 
 const ORGANIZATIONS = [...new Set(STALLS.map((stall) => stall.org))]
 
 export default function StallList() {
   const { openDetail } = useApp()
-  const [query, setQuery] = useState('')
   const [filter, setFilter] = useState(null)
   const [foodGenre, setFoodGenre] = useState(null)
   const [organization, setOrganization] = useState('')
   const [organizationMode, setOrganizationMode] = useState(false)
 
   const list = useMemo(() => {
-    const q = query.trim().toLowerCase()
     return STALLS.filter((s) => {
       if (filter && s.cat !== filter) return false
       if (foodGenre && s.foodGenre !== foodGenre) return false
       if (organization && s.org !== organization) return false
-      if (!q) return true
-      const menuText = s.menu.map(([item]) => item).join(' ')
-      const genreText = s.foodGenre ? FOOD_GENRES[s.foodGenre]?.label ?? '' : ''
-      return [s.name, s.org, s.placeLabel, s.pr, menuText, genreText]
-        .join(' ')
-        .toLowerCase()
-        .includes(q)
+      return true
     })
-  }, [query, filter, foodGenre, organization])
+  }, [filter, foodGenre, organization])
 
   const selectCategory = (id) => {
     const nextFilter = filter === id ? null : id
@@ -60,16 +51,7 @@ export default function StallList() {
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="sticky top-0 z-10 bg-paper/95 px-4 pb-2 pt-3 backdrop-blur">
-        <div className="flex items-center gap-2 rounded-full bg-white px-4 py-2.5 shadow-sm">
-          <SearchIcon width="18" height="18" className="shrink-0 text-stone-400" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="店名・メニュー・クラスをさがす"
-            className="w-full bg-transparent text-sm font-bold text-ink outline-none placeholder:text-stone-400"
-          />
-        </div>
-        <div className="mt-2 flex gap-2 overflow-x-auto [scrollbar-width:none]">
+        <div className="flex gap-2 overflow-x-auto [scrollbar-width:none]">
           <Chip
             label="すべて"
             active={!filter && !organizationMode}
