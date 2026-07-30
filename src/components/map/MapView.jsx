@@ -128,7 +128,10 @@ export default function MapView({ mapTarget, dataVersion }) {
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden bg-[#f4f1e3]">
-      <section className="relative h-1/2 min-h-0 shrink-0 border-b-2 border-white bg-[#f4f1e3]" aria-label="フロアマップ">
+      <section
+        className="relative h-[70vw] min-h-56 max-h-[48dvh] shrink-0 border-b-2 border-white bg-[#f4f1e3]"
+        aria-label="フロアマップ"
+      >
         <div
           className="pointer-events-none absolute left-2 top-1.5 z-40 max-w-[38%] rounded-2xl border border-white/80 bg-white/95 px-3 py-2 shadow-md backdrop-blur-sm"
           aria-live="polite"
@@ -210,7 +213,7 @@ export default function MapView({ mapTarget, dataVersion }) {
           <p className="text-[9px] font-black tracking-[0.16em] text-fest">STALLS ON THIS FLOOR</p>
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <h2 className="text-lg font-black leading-tight text-ink">このフロアの模擬店</h2>
+              <p className="text-lg font-black leading-tight text-ink">このフロアの模擬店</p>
               <p className="mt-0.5 truncate text-xs font-bold text-stone-500">{currentMap.label}</p>
             </div>
             {selectedStall && (
@@ -250,7 +253,7 @@ function MapSection({ sectionKey, label, children }) {
   return (
     <section
       data-map-section={sectionKey}
-      className="relative flex h-full min-h-full snap-start snap-always items-center justify-center px-1 pb-8 pt-20 [scroll-snap-stop:always]"
+      className="relative flex h-full min-h-full snap-start snap-always items-center justify-center [scroll-snap-stop:always]"
       aria-label={label}
     >
       {children}

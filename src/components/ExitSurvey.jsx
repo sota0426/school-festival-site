@@ -265,7 +265,17 @@ export default function ExitSurvey({ onDone }) {
                 </section>
               ))}
             </div>
-            <NextButton disabled={favoriteProjects.length === 0} onClick={() => setStep(2)} />
+            <div className="h-20" aria-hidden="true" />
+            <div className="fixed inset-x-0 bottom-0 z-30 bg-gradient-to-t from-orange-50 via-orange-50/95 to-transparent px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-5">
+              <button
+                type="button"
+                disabled={favoriteProjects.length === 0}
+                onClick={() => setStep(2)}
+                className="mx-auto block w-full max-w-lg rounded-full bg-gradient-to-r from-fest to-fest2 py-3.5 text-base font-black text-white shadow-lg shadow-orange-200 active:scale-95 disabled:opacity-40 disabled:shadow-none"
+              >
+                次へ
+              </button>
+            </div>
           </Question>
         )}
 
