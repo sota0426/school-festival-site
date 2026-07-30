@@ -3,7 +3,7 @@ import Access from './Access'
 
 export default function More() {
   return (
-    <div className="flex-1 overflow-y-auto px-4 pb-8 pt-4">
+    <div data-tab-scroll="more" className="flex-1 overflow-y-auto px-4 pb-8 pt-4">
       <section aria-labelledby="visitor-guide-title">
         <div className="rounded-3xl bg-gradient-to-br from-fest to-fest2 px-5 py-5 text-white shadow-lg shadow-orange-200">
           <p className="text-[10px] font-black tracking-[0.2em] text-white/75">VISITOR GUIDE</p>

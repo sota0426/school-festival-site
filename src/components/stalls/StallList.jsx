@@ -62,7 +62,7 @@ export default function StallList({ dataVersion }) {
   ).filter((group) => group.stalls.length > 0)
 
   return (
-    <div className="flex-1 overflow-y-auto">
+    <div data-tab-scroll="stalls" className="flex-1 overflow-y-auto">
       <div className="sticky top-0 z-10 bg-paper/95 px-4 pb-2 pt-3 backdrop-blur">
         <div className="flex gap-2 overflow-x-auto [scrollbar-width:none]">
           <Chip

@@ -3,7 +3,7 @@ import Timetable from './Timetable'
 
 export default function Events() {
   return (
-    <div className="flex-1 overflow-y-auto px-4 pb-8">
+    <div data-tab-scroll="events" className="flex-1 overflow-y-auto px-4 pb-8">
       <Timetable className="" />
       <section className="mt-8 border-t border-violet-100 pt-6" aria-labelledby="floor-quest-title">
         <p className="text-[10px] font-black tracking-[0.18em] text-violet-500">FLOOR QUEST</p>

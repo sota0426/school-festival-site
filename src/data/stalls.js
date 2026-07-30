@@ -1,6 +1,8 @@
 // 模擬店データ(ダミー30店)。本番はGoogleスプレッドシートからビルド時に生成する。
 // loc: { type:'out', x, y }(全体マップ座標) or { type:'room', building, floor, room }
-// poster: '/images/stalls/s01.webp' を追加すると一覧・詳細に表示される。
+// poster: '/images/stalls/s01.webp' または
+// poster: { thumbnail:'/images/stalls/s01-thumb.webp', src:'/images/stalls/s01.webp' }
+// とすると、一覧は軽量版、詳細は高画質版を表示する。
 // org: クラス・部活動・有志グループなどの団体名。foodGenre: フードの小ジャンル。
 // ポスターはスマホで読みやすい横A4比率(297:210)、WebP/JPEG、横1600px程度を推奨。
 // 縦長画像も切り抜かずに全体表示する。

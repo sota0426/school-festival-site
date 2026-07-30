@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { FESTIVAL } from './config'
 import { AppContext } from './lib/AppContext'
 import { needSurvey, flushPendingSurveys } from './lib/survey'
@@ -10,6 +10,7 @@ import StallList from './components/stalls/StallList'
 import StallDetail from './components/stalls/StallDetail'
 import Events from './components/Events'
 import More from './components/More'
+import PosterPreloader from './components/stalls/PosterPreloader'
 
 export default function App() {
   // splash → survey → app(アンケート回答済みなら直接app)
@@ -18,6 +19,24 @@ export default function App() {
   const [detailId, setDetailId] = useState(null)
   const [mapTarget, setMapTarget] = useState(null)
   const [dataVersion, setDataVersion] = useState(0)
+  const [visitedTabs, setVisitedTabs] = useState(() => new Set(['map']))
+
+  const activateTab = useCallback((nextTab) => {
+    setTab(nextTab)
+    setVisitedTabs((current) => {
+      if (current.has(nextTab)) return current
+      const next = new Set(current)
+      next.add(nextTab)
+      return next
+    })
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        document.querySelectorAll(`[data-tab-scroll="${nextTab}"]`).forEach((element) => {
+          element.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+        })
+      })
+    })
+  }, [])
 
   useEffect(() => {
     flushPendingSurveys()
@@ -32,12 +51,12 @@ export default function App() {
       closeDetail: () => setDetailId(null),
       showOnMap: (target) => {
         setDetailId(null)
-        setTab('map')
+        activateTab('map')
         setMapTarget({ ...target, ts: Date.now() })
       },
-      setTab,
+      setTab: activateTab,
     }),
-    [],
+    [activateTab],
   )
 
   if (stage === 'splash') return <Splash onEnter={() => setStage('survey')} />
@@ -50,7 +69,7 @@ export default function App() {
         <button
           type="button"
           onClick={() => {
-            setTab('map')
+            activateTab('map')
             setMapTarget({ type: 'point', ts: Date.now() })
           }}
           className="shrink-0 bg-gradient-to-r from-fest to-fest2 bg-clip-text px-1 text-xl font-black text-transparent transition-transform active:scale-95"
@@ -58,7 +77,7 @@ export default function App() {
         >
           {FESTIVAL.name}
         </button>
-        <TabBar tab={tab} onChange={setTab} />
+        <TabBar tab={tab} onChange={activateTab} />
       </header>
 
       {/* コンテンツ(タブはすべてマウントしたまま切替=マップの状態を保持) */}
@@ -66,17 +85,24 @@ export default function App() {
         <Section active={tab === 'map'}>
           <MapView mapTarget={mapTarget} dataVersion={dataVersion} />
         </Section>
-        <Section active={tab === 'stalls'}>
-          <StallList dataVersion={dataVersion} />
-        </Section>
-        <Section active={tab === 'events'}>
-          <Events />
-        </Section>
-        <Section active={tab === 'more'}>
-          <More />
-        </Section>
+        {visitedTabs.has('stalls') && (
+          <Section active={tab === 'stalls'}>
+            <StallList dataVersion={dataVersion} />
+          </Section>
+        )}
+        {visitedTabs.has('events') && (
+          <Section active={tab === 'events'}>
+            <Events />
+          </Section>
+        )}
+        {visitedTabs.has('more') && (
+          <Section active={tab === 'more'}>
+            <More />
+          </Section>
+        )}
       </main>
 
+      <PosterPreloader />
       {detailId && <StallDetail stallId={detailId} />}
     </AppContext.Provider>
   )

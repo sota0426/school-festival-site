@@ -10,7 +10,7 @@ const TABS = [
 export default function TabBar({ tab, onChange }) {
   return (
     <nav className="min-w-0 flex-1" aria-label="メインメニュー">
-      <div className="flex justify-end gap-1">
+      <div className="grid w-full grid-cols-4 items-center">
         {TABS.map(({ id, label, Icon, inactive }) => {
           const active = tab === id
           return (
@@ -20,14 +20,14 @@ export default function TabBar({ tab, onChange }) {
               onClick={() => onChange(id)}
               aria-label={label}
               aria-current={active ? 'page' : undefined}
-              className={`group flex h-11 shrink-0 items-center justify-center rounded-full ring-1 ring-black/5 transition-all duration-300 active:scale-90 ${
+              className={`group flex h-11 shrink-0 items-center justify-center justify-self-center rounded-full ring-1 ring-black/5 transition-all duration-300 active:scale-90 ${
                 active
-                  ? 'gap-1.5 bg-fest px-3 text-white shadow-md shadow-orange-200'
+                  ? 'z-10 gap-1 bg-fest px-2 text-white shadow-md shadow-orange-200'
                   : `w-11 ${inactive} shadow-sm`
               }`}
             >
               <Icon width="22" height="22" />
-              {active && <span className="whitespace-nowrap text-[11px] font-black">{label}</span>}
+              {active && <span className="whitespace-nowrap text-[10px] font-black">{label}</span>}
             </button>
           )
         })}

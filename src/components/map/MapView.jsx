@@ -83,7 +83,7 @@ export default function MapView({ mapTarget, dataVersion }) {
       setSelectedStall(null)
       setFocusedStallId(null)
       setActiveKey(GROUNDS_KEY)
-      scrollToSection(GROUNDS_KEY)
+      scrollToSection(GROUNDS_KEY, 'auto')
     }
     // mapTarget.ts is the request identity.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -128,6 +128,7 @@ export default function MapView({ mapTarget, dataVersion }) {
 
         <div
           ref={mapScroller}
+          data-tab-scroll="map"
           onScroll={handleMapScroll}
           className="map-scroll-area h-full snap-y snap-mandatory overflow-y-scroll overscroll-y-contain scroll-smooth"
           aria-label="学校全体と全校舎のフロアマップ"
@@ -203,7 +204,11 @@ export default function MapView({ mapTarget, dataVersion }) {
               onDetail={() => openDetail(selectedStall.id)}
             />
           ) : (
-            <StallVerticalList stalls={currentStalls} onSelect={showStallOnMap} />
+            <StallVerticalList
+              key={`${activeKey}-${mapTarget?.ts || 'initial'}`}
+              stalls={currentStalls}
+              onSelect={showStallOnMap}
+            />
           )}
         </div>
       </section>
@@ -284,7 +289,7 @@ function StallVerticalList({ stalls, onSelect }) {
     return <div className="grid h-full place-items-center px-6 text-center text-xs font-bold text-stone-400">このマップに表示する模擬店はありません</div>
   }
   return (
-    <div className="h-full overflow-y-auto px-3 py-2">
+    <div data-tab-scroll="map" className="h-full overflow-y-auto px-3 py-2">
         <div className="space-y-2">
           {stalls.map((stall) => {
             const cat = CATEGORIES[stall.cat]
@@ -316,7 +321,7 @@ function mapKeyForStall(stall) {
 function SelectedStallPanel({ stall, onDetail }) {
   const cat = CATEGORIES[stall.cat]
   return (
-    <div className="flex h-full flex-col overflow-y-auto px-4 py-3">
+    <div data-tab-scroll="map" className="flex h-full flex-col overflow-y-auto px-4 py-3">
       <div className="flex items-start gap-3">
         <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl text-2xl" style={{ background: cat.soft }}>{cat.emoji}</span>
         <div className="min-w-0 flex-1">

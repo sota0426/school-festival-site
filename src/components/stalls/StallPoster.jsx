@@ -2,7 +2,11 @@ import { useEffect, useState } from 'react'
 
 export default function StallPoster({ stall, className = '', eager = false }) {
   const [failed, setFailed] = useState(false)
-  const poster = typeof stall.poster === 'string' ? stall.poster : stall.poster?.src
+  const poster = typeof stall.poster === 'string'
+    ? stall.poster
+    : eager
+      ? stall.poster?.src
+      : stall.poster?.thumbnail || stall.poster?.src
 
   useEffect(() => {
     setFailed(false)
