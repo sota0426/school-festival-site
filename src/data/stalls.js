@@ -5,14 +5,14 @@
 // ポスターはスマホで読みやすい横A4比率(297:210)、WebP/JPEG、横1600px程度を推奨。
 // 縦長画像も切り抜かずに全体表示する。
 
-export const STALLS = [
+export const DEFAULT_STALLS = [
   // --- 第1グラウンド(屋外フード) ---
   { id: 's01', name: '焼きそば鶴', org: '3年A組', cat: 'food', foodGenre: 'meal', loc: { type: 'out', x: 292, y: 438 }, placeLabel: '第1グラウンド', menu: [['焼きそば', 300], ['大盛り', 400]], hours: '10:00〜15:00', pr: '鉄板で焼き上げる伝統の鶴東ソース焼きそば!' },
   { id: 's02', name: 'たこ焼き番長', org: '3年B組', cat: 'food', foodGenre: 'meal', loc: { type: 'out', x: 350, y: 470 }, placeLabel: '第1グラウンド', menu: [['たこ焼き6個', 350], ['チーズトッピング', 50]], hours: '10:00〜15:00', pr: '外カリ中トロ。行列必至の人気店です。' },
-  { id: 's03', name: 'フランクフルト工房', org: '野球部', cat: 'food', foodGenre: 'grill', loc: { type: 'out', x: 296, y: 512 }, placeLabel: '第1グラウンド', menu: [['フランクフルト', 250], ['チーズドッグ', 350]], hours: '9:30〜15:30', pr: '野球部が心を込めて焼きます。ジューシーさ日本一!' },
+  { id: 's03', name: 'フランクフルト工房', org: '野球部', cat: 'food', foodGenre: 'meal', loc: { type: 'out', x: 296, y: 512 }, placeLabel: '第1グラウンド', menu: [['フランクフルト', 250], ['チーズドッグ', 350]], hours: '9:30〜15:30', pr: '野球部が心を込めて焼きます。ジューシーさ日本一!' },
   { id: 's04', name: 'かき氷 ひんやり堂', org: 'サッカー部', cat: 'food', foodGenre: 'sweets', loc: { type: 'out', x: 354, y: 548 }, placeLabel: '第1グラウンド', menu: [['いちご/ブルーハワイ', 200], ['練乳追加', 50]], hours: '10:00〜15:30', pr: '真夏の文化祭はこれがないと始まらない!' },
   { id: 's05', name: 'チュロスカフェ吹部', org: '吹奏楽部', cat: 'food', foodGenre: 'fried', loc: { type: 'out', x: 428, y: 438 }, placeLabel: '第1グラウンド', menu: [['シナモンチュロス', 300], ['チョコチュロス', 350]], hours: '10:00〜14:30', pr: '演奏の合間に揚げたてをどうぞ♪' },
-  { id: 's06', name: '炭火焼き鳥 PTA亭', org: 'PTA', cat: 'food', foodGenre: 'grill', loc: { type: 'out', x: 470, y: 478 }, placeLabel: '第1グラウンド', menu: [['焼き鳥2本', 300], ['タレ/塩', 0]], hours: '10:30〜15:00', pr: '保護者の本気。炭火の香りに誘われて。' },
+  { id: 's06', name: '炭火焼き鳥 PTA亭', org: 'PTA', cat: 'food', foodGenre: 'meal', loc: { type: 'out', x: 470, y: 478 }, placeLabel: '第1グラウンド', menu: [['焼き鳥2本', 300], ['タレ/塩', 0]], hours: '10:30〜15:00', pr: '保護者の本気。炭火の香りに誘われて。' },
   { id: 's07', name: 'ベビーカステラ三組', org: '3年C組', cat: 'food', foodGenre: 'sweets', loc: { type: 'out', x: 432, y: 520 }, placeLabel: '第1グラウンド', menu: [['10個入り', 300], ['20個入り', 550]], hours: '10:00〜15:00', pr: 'ひとくちサイズの幸せ、揚げたてをどうぞ。' },
   { id: 's08', name: 'ドリンク&ラムネ売店', org: '生徒会', cat: 'food', foodGenre: 'drink', loc: { type: 'out', x: 472, y: 560 }, placeLabel: '第1グラウンド', menu: [['ラムネ', 150], ['お茶・ジュース', 120]], hours: '9:00〜16:00', pr: '熱中症対策はこまめな水分補給から!' },
 
@@ -52,6 +52,32 @@ export const STALLS = [
   { id: 's29', name: '中学美術部展', org: '中学美術部', cat: 'exhibit', loc: { type: 'room', building: 'chugaku', floor: '2f', room: 'c2-4' }, placeLabel: '北校舎2F 美術室', menu: [], hours: '9:00〜16:00', pr: '中学生の感性が爆発。体験コーナーもあります。' },
   { id: 's30', name: 'クイズラリー本部', org: '中学生徒会', cat: 'game', loc: { type: 'room', building: 'chugaku', floor: '2f', room: 'c2-5' }, placeLabel: '北校舎2F 多目的室', menu: [['参加無料・景品あり', 0]], hours: '9:30〜15:00', pr: '校内を巡ってクイズに挑戦。全問正解で豪華景品!' },
 ]
+
+const STALLS_STORAGE_KEY = 'festival-stalls-v1'
+
+function readSavedStalls() {
+  if (typeof window === 'undefined') return null
+  try {
+    const saved = JSON.parse(localStorage.getItem(STALLS_STORAGE_KEY) || 'null')
+    return Array.isArray(saved) && saved.length > 0
+      ? saved.map((stall) => stall.foodGenre === 'grill' ? { ...stall, foodGenre: 'meal' } : stall)
+      : null
+  } catch {
+    return null
+  }
+}
+
+export const STALLS = readSavedStalls() || structuredClone(DEFAULT_STALLS)
+
+export function replaceStalls(nextStalls) {
+  STALLS.splice(0, STALLS.length, ...structuredClone(nextStalls))
+  localStorage.setItem(STALLS_STORAGE_KEY, JSON.stringify(STALLS))
+  window.dispatchEvent(new CustomEvent('festival-data-save'))
+}
+
+export function resetStalls() {
+  replaceStalls(DEFAULT_STALLS)
+}
 
 export const stallById = (id) => STALLS.find((s) => s.id === id)
 

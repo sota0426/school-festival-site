@@ -1,42 +1,33 @@
-import { MapIcon, StallIcon, ClockIcon, MoreIcon } from './Icons'
+import { MapIcon, StallIcon, CalendarIcon, MoreIcon } from './Icons'
 
 const TABS = [
-  { id: 'map', label: 'マップ', Icon: MapIcon },
-  { id: 'stalls', label: '模擬店', Icon: StallIcon },
-  { id: 'events', label: 'イベント', Icon: ClockIcon },
-  { id: 'more', label: 'その他', Icon: MoreIcon },
+  { id: 'map', label: 'マップ', Icon: MapIcon, inactive: 'bg-blue-50 text-blue-600' },
+  { id: 'stalls', label: '模擬店', Icon: StallIcon, inactive: 'bg-orange-50 text-orange-600' },
+  { id: 'events', label: 'イベント', Icon: CalendarIcon, inactive: 'bg-violet-50 text-violet-600' },
+  { id: 'more', label: 'その他', Icon: MoreIcon, inactive: 'bg-teal-50 text-teal-600' },
 ]
 
 export default function TabBar({ tab, onChange }) {
   return (
     <nav className="min-w-0 flex-1" aria-label="メインメニュー">
-      <div className="flex justify-end gap-0.5">
-        {TABS.map(({ id, label, Icon }) => {
+      <div className="flex justify-end gap-1">
+        {TABS.map(({ id, label, Icon, inactive }) => {
           const active = tab === id
           return (
             <button
               key={id}
               type="button"
               onClick={() => onChange(id)}
-              className="group relative flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-xl px-0.5 py-1"
+              aria-label={label}
               aria-current={active ? 'page' : undefined}
+              className={`group flex h-11 shrink-0 items-center justify-center rounded-full ring-1 ring-black/5 transition-all duration-300 active:scale-90 ${
+                active
+                  ? 'gap-1.5 bg-fest px-3 text-white shadow-md shadow-orange-200'
+                  : `w-11 ${inactive} shadow-sm`
+              }`}
             >
-              <span
-                className={`flex h-7 w-9 items-center justify-center rounded-full transition-all duration-300 ${
-                  active
-                    ? 'bg-fest text-white shadow-md shadow-orange-200 -translate-y-0.5'
-                    : 'text-stone-400 group-active:scale-90'
-                }`}
-              >
-                <Icon width="18" height="18" />
-              </span>
-              <span
-                className={`whitespace-nowrap text-[9px] font-bold leading-none transition-colors ${
-                  active ? 'text-fest' : 'text-stone-400'
-                }`}
-              >
-                {label}
-              </span>
+              <Icon width="22" height="22" />
+              {active && <span className="whitespace-nowrap text-[11px] font-black">{label}</span>}
             </button>
           )
         })}

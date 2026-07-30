@@ -17,9 +17,13 @@ export default function App() {
   const [tab, setTab] = useState('map')
   const [detailId, setDetailId] = useState(null)
   const [mapTarget, setMapTarget] = useState(null)
+  const [dataVersion, setDataVersion] = useState(0)
 
   useEffect(() => {
     flushPendingSurveys()
+    const refreshData = () => setDataVersion((version) => version + 1)
+    window.addEventListener('festival-data-save', refreshData)
+    return () => window.removeEventListener('festival-data-save', refreshData)
   }, [])
 
   const ctx = useMemo(
@@ -60,10 +64,10 @@ export default function App() {
       {/* コンテンツ(タブはすべてマウントしたまま切替=マップの状態を保持) */}
       <main className="relative min-h-0 flex-1">
         <Section active={tab === 'map'}>
-          <MapView mapTarget={mapTarget} />
+          <MapView mapTarget={mapTarget} dataVersion={dataVersion} />
         </Section>
         <Section active={tab === 'stalls'}>
-          <StallList />
+          <StallList dataVersion={dataVersion} />
         </Section>
         <Section active={tab === 'events'}>
           <Events />

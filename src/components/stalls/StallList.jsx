@@ -1,33 +1,31 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { STALLS } from '../../data/stalls'
 import { CATEGORIES, CATEGORY_IDS, FOOD_GENRES, FOOD_GENRE_IDS } from '../../data/categories'
 import { useApp } from '../../lib/AppContext'
 import StallPoster from './StallPoster'
 
-const ORGANIZATIONS = [...new Set(STALLS.map((stall) => stall.org))]
-
-export default function StallList() {
+export default function StallList({ dataVersion }) {
   const { openDetail } = useApp()
   const [filter, setFilter] = useState(null)
   const [foodGenre, setFoodGenre] = useState(null)
   const [organization, setOrganization] = useState('')
-  const [organizationMode, setOrganizationMode] = useState(false)
+  const [organizationMode, setOrganizationMode] = useState(true)
+  const organizations = [...new Set(STALLS.map((stall) => stall.org))]
 
-  const list = useMemo(() => {
-    return STALLS.filter((s) => {
-      if (filter && s.cat !== filter) return false
-      if (foodGenre && s.foodGenre !== foodGenre) return false
-      if (organization && s.org !== organization) return false
-      return true
-    })
-  }, [filter, foodGenre, organization])
+  const list = STALLS.filter((stall) => {
+    if (filter && stall.cat !== filter) return false
+    if (foodGenre && stall.foodGenre !== foodGenre) return false
+    if (organization && stall.org !== organization) return false
+    return true
+  })
+  void dataVersion
 
   const selectCategory = (id) => {
     const nextFilter = filter === id ? null : id
     setFilter(nextFilter)
     setOrganization('')
     setOrganizationMode(false)
-    if (nextFilter !== 'food') setFoodGenre(null)
+    setFoodGenre(nextFilter === 'food' ? 'meal' : null)
   }
 
   const selectOrganizationMode = () => {
@@ -36,24 +34,24 @@ export default function StallList() {
     setOrganizationMode(true)
   }
 
-  const groups = useMemo(() => {
-    const definitions = [
-      { id: 'outdoor', label: '屋外・グラウンド', emoji: '🌳', matches: (stall) => stall.loc.type === 'out' },
-      { id: 'honkan', label: '中央校舎', emoji: '🏫', matches: (stall) => stall.loc.building === 'honkan' },
-      { id: 'chugaku', label: '北校舎', emoji: '🏫', matches: (stall) => stall.loc.building === 'chugaku' },
-      { id: 'minami', label: '南校舎', emoji: '🏫', matches: (stall) => stall.loc.building === 'minami' },
-    ]
-    return definitions
-      .map((group) => ({ ...group, stalls: list.filter(group.matches) }))
-      .filter((group) => group.stalls.length > 0)
-  }, [list])
+  const definitions = [
+    { id: 'outdoor', label: '屋外・グラウンド', emoji: '🌳', matches: (stall) => stall.loc.type === 'out' },
+    { id: 'honkan', label: '中央校舎', emoji: '🏫', matches: (stall) => stall.loc.building === 'honkan' },
+    { id: 'chugaku', label: '北校舎', emoji: '🏫', matches: (stall) => stall.loc.building === 'chugaku' },
+    { id: 'minami', label: '南校舎', emoji: '🏫', matches: (stall) => stall.loc.building === 'minami' },
+  ]
+  const groups = definitions
+    .map((group) => ({ ...group, stalls: list.filter(group.matches) }))
+    .filter((group) => group.stalls.length > 0)
 
   return (
     <div className="flex-1 overflow-y-auto">
       <div className="sticky top-0 z-10 bg-paper/95 px-4 pb-2 pt-3 backdrop-blur">
         <div className="flex gap-2 overflow-x-auto [scrollbar-width:none]">
           <Chip
+            icon="すべて"
             label="すべて"
+            alwaysLabel
             active={!filter && !organizationMode}
             color="#6b6255"
             onClick={() => {
@@ -63,32 +61,34 @@ export default function StallList() {
               setOrganizationMode(false)
             }}
           />
+          <Chip
+            icon="👥"
+            label="クラス"
+            active={organizationMode}
+            color="#4f766b"
+            onClick={selectOrganizationMode}
+          />
           {CATEGORY_IDS.map((id) => (
             <Chip
               key={id}
-              label={`${CATEGORIES[id].emoji} ${CATEGORIES[id].label}`}
+              icon={CATEGORIES[id].emoji}
+              label={CATEGORIES[id].label}
               active={filter === id}
               color={CATEGORIES[id].color}
               onClick={() => selectCategory(id)}
             />
           ))}
-          <Chip
-            label="👥 クラス・団体"
-            active={organizationMode}
-            color="#4f766b"
-            onClick={selectOrganizationMode}
-          />
         </div>
         {filter === 'food' && (
           <div className="mt-2 flex gap-2 overflow-x-auto [scrollbar-width:none]" aria-label="フードジャンル">
-            <Chip label="フードすべて" active={!foodGenre} color="#d65b26" onClick={() => setFoodGenre(null)} />
             {FOOD_GENRE_IDS.map((id) => (
               <Chip
                 key={id}
-                label={`${FOOD_GENRES[id].emoji} ${FOOD_GENRES[id].label}`}
+                icon={FOOD_GENRES[id].emoji}
+                label={FOOD_GENRES[id].label}
                 active={foodGenre === id}
                 color="#d65b26"
-                onClick={() => setFoodGenre(foodGenre === id ? null : id)}
+                onClick={() => setFoodGenre(id)}
               />
             ))}
           </div>
@@ -104,7 +104,7 @@ export default function StallList() {
               aria-label="クラス・団体で絞り込む"
             >
               <option value="">選択してください</option>
-              {ORGANIZATIONS.map((org) => <option key={org} value={org}>{org}</option>)}
+              {organizations.map((org) => <option key={org} value={org}>{org}</option>)}
             </select>
           </label>
         )}
@@ -164,17 +164,22 @@ export default function StallList() {
   )
 }
 
-function Chip({ label, active, color, onClick }) {
+function Chip({ icon, label, active, color, onClick, alwaysLabel = false }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="shrink-0 rounded-full px-3.5 py-1.5 text-xs font-bold shadow-sm transition-all active:scale-90"
+      aria-label={label}
+      aria-pressed={active}
+      className={`flex h-10 shrink-0 items-center justify-center rounded-full text-xs font-black shadow-sm ring-1 ring-black/5 transition-all active:scale-90 ${
+        active || alwaysLabel ? 'gap-1.5 px-3.5' : 'w-10'
+      }`}
       style={
         active ? { background: color, color: '#fff' } : { background: '#fff', color: '#6b6255' }
       }
     >
-      {label}
+      <span className={alwaysLabel ? '' : 'text-lg'} aria-hidden="true">{icon}</span>
+      {(active || alwaysLabel) && !alwaysLabel && <span>{label}</span>}
     </button>
   )
 }

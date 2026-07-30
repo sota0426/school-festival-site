@@ -1,7 +1,7 @@
 import { CAMPUS } from '../../data/campus'
 import { FLOOR_VIEW } from '../../data/floors'
 import { routeForStall } from '../../data/routes'
-import CampusMap from '../map/CampusMap'
+import IllustratedCampusMap from '../map/IllustratedCampusMap'
 import FloorMap from '../map/FloorMap'
 
 const noop = () => {}
@@ -54,11 +54,9 @@ export default function StallLocationGuide({ stall }) {
           </div>
           <div className="mt-2 overflow-hidden rounded-2xl border border-stone-200 bg-[#fbf8ee] shadow-sm">
             <svg viewBox={`0 0 ${CAMPUS.w} ${CAMPUS.h}`} className="h-auto w-full" aria-label={`${stall.name}の敷地内マップ`}>
-              <CampusMap
-                scale={1}
+              <IllustratedCampusMap
                 selectedStallId={stall.id}
                 onPinTap={noop}
-                onBuildingTap={noop}
               />
             </svg>
           </div>

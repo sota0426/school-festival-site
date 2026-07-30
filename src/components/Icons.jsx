@@ -29,6 +29,14 @@ export const ClockIcon = (props) => (
   </svg>
 )
 
+export const CalendarIcon = (props) => (
+  <svg viewBox="0 0 24 24" width="24" height="24" {...base} {...props}>
+    <rect x="3.5" y="5.5" width="17" height="15" rx="2.5" />
+    <path d="M7.5 3.5v4M16.5 3.5v4M3.5 10h17" />
+    <path d="M8 14h.01M12 14h.01M16 14h.01M8 17.5h.01M12 17.5h.01" strokeWidth="3" />
+  </svg>
+)
+
 export const CarIcon = (props) => (
   <svg viewBox="0 0 24 24" width="24" height="24" {...base} {...props}>
     <path d="M5 12 6.5 7h11L19 12" />

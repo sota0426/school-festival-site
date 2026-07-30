@@ -34,6 +34,14 @@ button {
   font-family: inherit;
 }
 
+.map-scroll-area {
+  scrollbar-width: none;
+}
+
+.map-scroll-area::-webkit-scrollbar {
+  display: none;
+}
+
 /* ---- animations ---- */
 
 @keyframes fade-up {
