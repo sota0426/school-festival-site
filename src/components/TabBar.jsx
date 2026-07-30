@@ -27,7 +27,7 @@ export default function TabBar({ tab, onChange }) {
               }`}
             >
               <Icon width="22" height="22" />
-              {active && <span className="whitespace-nowrap text-[10px] font-black">{label}</span>}
+              {active && <span className="whitespace-nowrap text-[12px] font-black">{label}</span>}
             </button>
           )
         })}
