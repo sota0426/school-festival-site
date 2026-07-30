@@ -69,7 +69,12 @@ export default function Timetable({ className = 'flex-1 overflow-y-auto px-4 pb-
                     <span className="h-8 w-px bg-stone-200" />
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-black leading-snug text-ink">{ev.title}</p>
-                      <p className="text-[11px] text-stone-500">{ev.by}</p>
+                      {ev.by && <p className="text-[11px] font-bold text-stone-500">{ev.by}</p>}
+                      {ev.description && (
+                        <p className="mt-1 text-[11px] font-medium leading-relaxed text-stone-500">
+                          {ev.description}
+                        </p>
+                      )}
                     </div>
                     {st === 'now' && (
                       <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-fest px-2.5 py-1 text-[10px] font-black text-white">

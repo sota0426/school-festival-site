@@ -74,7 +74,7 @@ export default function Splash({ onEnter }) {
         入場する 🎉
       </button>
       <p className="fade-up mt-3 text-xs text-stone-500" style={{ animationDelay: '1.6s' }}>
-        かんたんなアンケートのあと、サイトをご覧いただけます
+        鶴東祭をお楽しみください！
       </p>
     </div>
   )

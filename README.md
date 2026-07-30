@@ -33,6 +33,14 @@ npm run build
 https://sota0426.github.io/school-festival-site/
 ```
 
+帰り際アンケートURL:
+
+```text
+https://sota0426.github.io/school-festival-site/?exit-survey=1
+```
+
+印刷用QRコードは `public/images/exit-survey-qr.png` です。
+
 リポジトリ名を変更した場合は、`vite.config.js`の`/school-festival-site/`も新しいリポジトリ名へ変更してください。
 
 ## Instagram設定

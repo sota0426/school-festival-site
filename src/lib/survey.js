@@ -1,6 +1,7 @@
 import { FESTIVAL, isFestivalDay } from '../config'
 
 const KEY = 'tsuruto2026_survey'
+const EXIT_KEY = 'tsuruto2026_exit_survey'
 const PENDING_KEY = 'tsuruto2026_survey_pending'
 
 export function loadSurvey() {
@@ -11,21 +12,43 @@ export function loadSurvey() {
   }
 }
 
-// 初回は必須回答。事前に「見るだけ」と答えた端末には当日もう一度出す。
+export function loadExitSurvey() {
+  try {
+    return JSON.parse(localStorage.getItem(EXIT_KEY))
+  } catch {
+    return null
+  }
+}
+
+// アンケートは開催日のみ表示し、当日にまだ回答していない場合だけ必須にする。
 export function needSurvey() {
+  if (!isFestivalDay()) return false
+
   const saved = loadSurvey()
   if (!saved) return true
-  if (isFestivalDay() && saved.visiting === 'online') {
-    const answered = new Date(saved.answeredAt)
-    return !isFestivalDay(answered)
-  }
-  return false
+
+  const answered = new Date(saved.answeredAt)
+  return Number.isNaN(answered.getTime()) || !isFestivalDay(answered)
 }
 
 export function saveSurvey(answer) {
-  const record = { ...answer, answeredAt: new Date().toISOString() }
+  const record = { ...answer, surveyType: 'entry', answeredAt: new Date().toISOString() }
   localStorage.setItem(KEY, JSON.stringify(record))
   sendToGas(record)
+}
+
+export function saveExitSurvey(answer) {
+  if (loadExitSurvey()) return false
+
+  const record = {
+    ...answer,
+    surveyType: 'exit',
+    responseId: crypto.randomUUID(),
+    answeredAt: new Date().toISOString(),
+  }
+  localStorage.setItem(EXIT_KEY, JSON.stringify(record))
+  sendToGas(record)
+  return true
 }
 
 async function sendToGas(record) {

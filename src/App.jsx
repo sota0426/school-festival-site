@@ -4,6 +4,7 @@ import { AppContext } from './lib/AppContext'
 import { needSurvey, flushPendingSurveys } from './lib/survey'
 import Splash from './components/Splash'
 import Survey from './components/Survey'
+import ExitSurvey from './components/ExitSurvey'
 import TabBar from './components/TabBar'
 import MapView from './components/map/MapView'
 import StallList from './components/stalls/StallList'
@@ -13,8 +14,11 @@ import More from './components/More'
 import PosterPreloader from './components/stalls/PosterPreloader'
 
 export default function App() {
-  // splash → survey → app(アンケート回答済みなら直接app)
-  const [stage, setStage] = useState(() => (needSurvey() ? 'splash' : 'app'))
+  // 開催日かつ当日未回答の場合だけ survey → splash → app
+  const [stage, setStage] = useState(() => {
+    if (new URLSearchParams(window.location.search).has('exit-survey')) return 'exit-survey'
+    return needSurvey() ? 'survey' : 'app'
+  })
   const [tab, setTab] = useState('map')
   const [detailId, setDetailId] = useState(null)
   const [mapTarget, setMapTarget] = useState(null)
@@ -59,8 +63,9 @@ export default function App() {
     [activateTab],
   )
 
-  if (stage === 'splash') return <Splash onEnter={() => setStage('survey')} />
-  if (stage === 'survey') return <Survey onDone={() => setStage('app')} />
+  if (stage === 'survey') return <Survey onDone={() => setStage('splash')} />
+  if (stage === 'splash') return <Splash onEnter={() => setStage('app')} />
+  if (stage === 'exit-survey') return <ExitSurvey onDone={() => setStage('app')} />
 
   return (
     <AppContext.Provider value={ctx}>
@@ -97,7 +102,10 @@ export default function App() {
         )}
         {visitedTabs.has('more') && (
           <Section active={tab === 'more'}>
-            <More />
+            <More
+              onOpenSurvey={() => setStage('survey')}
+              onOpenExitSurvey={() => setStage('exit-survey')}
+            />
           </Section>
         )}
       </main>

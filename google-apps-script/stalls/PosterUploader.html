@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      body { color: #33261f; font-family: system-ui, sans-serif; padding: 14px; }
+      h2 { font-size: 17px; margin: 0 0 4px; }
+      p { color: #70675f; font-size: 12px; line-height: 1.6; margin: 0 0 14px; }
+      label { display: block; font-size: 12px; font-weight: 700; margin-top: 14px; }
+      input { box-sizing: border-box; margin-top: 7px; width: 100%; }
+      input[type="text"] { border: 1px solid #ddd2c8; border-radius: 10px; padding: 10px; }
+      button { background: #e8442e; border: 0; border-radius: 999px; color: white; cursor: pointer; font-weight: 800; margin-top: 18px; padding: 12px; width: 100%; }
+      button:disabled { cursor: wait; opacity: .5; }
+      #message { font-size: 12px; font-weight: 700; margin-top: 12px; }
+    </style>
+  </head>
+  <body>
+    <h2><?= stallName ?></h2>
+    <p>ID: <?= stallId ?><br>JPEG・PNG・WebP、10MB以下を推奨します。</p>
+    <label>
+      ポスター画像
+      <input id="file" type="file" accept="image/jpeg,image/png,image/webp">
+    </label>
+    <label>
+      画像の説明
+      <input id="alt" type="text" value="<?= stallName ?>のポスター">
+    </label>
+    <button id="submit" type="button" onclick="upload()">Driveへアップロード</button>
+    <div id="message"></div>
+
+    <script>
+      const row = <?!= JSON.stringify(row) ?>;
+      const stallId = <?!= JSON.stringify(stallId) ?>;
+
+      function upload() {
+        const file = document.getElementById('file').files[0];
+        const message = document.getElementById('message');
+        const button = document.getElementById('submit');
+        if (!file) {
+          message.textContent = '画像を選択してください。';
+          return;
+        }
+        if (file.size > 10 * 1024 * 1024) {
+          message.textContent = '画像を10MB以下にしてください。';
+          return;
+        }
+        button.disabled = true;
+        message.textContent = 'アップロードしています…';
+        const reader = new FileReader();
+        reader.onload = () => {
+          const base64 = reader.result.split(',')[1];
+          google.script.run
+            .withSuccessHandler((result) => {
+              message.innerHTML = `登録しました：<a href="${result.viewUrl}" target="_blank">${result.filename}</a>`;
+              button.disabled = false;
+            })
+            .withFailureHandler((error) => {
+              message.textContent = `エラー：${error.message}`;
+              button.disabled = false;
+            })
+            .uploadPoster({
+              row,
+              stallId,
+              base64,
+              mimeType: file.type,
+              altText: document.getElementById('alt').value,
+            });
+        };
+        reader.readAsDataURL(file);
+      }
+    </script>
+  </body>
+</html>

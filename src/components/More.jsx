@@ -1,7 +1,7 @@
 import { FESTIVAL } from '../config'
 import Access from './Access'
 
-export default function More() {
+export default function More({ onOpenSurvey, onOpenExitSurvey }) {
   return (
     <div data-tab-scroll="more" className="flex-1 overflow-y-auto px-4 pb-8 pt-4">
       <section aria-labelledby="visitor-guide-title">
@@ -41,6 +41,25 @@ export default function More() {
         <h2 id="access-title" className="mt-0.5 text-xl font-black text-ink">🚗 交通・アクセス</h2>
         <p className="mb-3 mt-1 text-xs font-bold text-stone-500">臨時駐車場と来場方法のご案内</p>
         <Access embedded />
+      </section>
+
+      <section className="mt-8 border-t border-stone-200 pt-6" aria-labelledby="dev-tools-title">
+        <p className="text-[10px] font-black tracking-[0.18em] text-stone-400">DEVELOPMENT</p>
+        <h2 id="dev-tools-title" className="mt-0.5 text-base font-black text-ink">開発用メニュー</h2>
+        <button
+          type="button"
+          onClick={onOpenSurvey}
+          className="mt-3 w-full rounded-2xl border-2 border-dashed border-orange-200 bg-orange-50 px-4 py-3 text-sm font-black text-fest transition-transform active:scale-[0.98]"
+        >
+          アンケートに答える（DEV用）
+        </button>
+        <button
+          type="button"
+          onClick={onOpenExitSurvey}
+          className="mt-3 w-full rounded-2xl border-2 border-dashed border-teal-200 bg-teal-50 px-4 py-3 text-sm font-black text-teal-700 transition-transform active:scale-[0.98]"
+        >
+          帰り際アンケートに答える（DEV用）
+        </button>
       </section>
     </div>
   )
