@@ -10,7 +10,6 @@ import IllustratedCampusMap from './IllustratedCampusMap'
 import FloorMap from './FloorMap'
 
 const GROUNDS_KEY = 'grounds'
-const CAMPUS_KEY = 'campus'
 
 export default function MapView({ mapTarget, dataVersion }) {
   const { openDetail } = useApp()
@@ -21,6 +20,7 @@ export default function MapView({ mapTarget, dataVersion }) {
   const [customMaps, setCustomMaps] = useState({ annotations: {}, images: {} })
   const [stallListScrollByMap, setStallListScrollByMap] = useState({})
   const mapScroller = useRef(null)
+  const mapSnapTimer = useRef(null)
   void dataVersion
 
   const floorSections = useMemo(
@@ -40,7 +40,6 @@ export default function MapView({ mapTarget, dataVersion }) {
 
   const mapOrder = [
     { key: GROUNDS_KEY, label: '敷地内全体' },
-    { key: CAMPUS_KEY, label: '校舎全体の案内' },
     ...floorSections,
   ]
 
@@ -56,7 +55,10 @@ export default function MapView({ mapTarget, dataVersion }) {
   useEffect(() => {
     reloadCustomMaps()
     window.addEventListener('festival-map-editor-save', reloadCustomMaps)
-    return () => window.removeEventListener('festival-map-editor-save', reloadCustomMaps)
+    return () => {
+      window.removeEventListener('festival-map-editor-save', reloadCustomMaps)
+      window.clearTimeout(mapSnapTimer.current)
+    }
     // Map keys are static for this build.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -106,6 +108,18 @@ export default function MapView({ mapTarget, dataVersion }) {
         setFocusedStallId(null)
       }
     }
+    window.clearTimeout(mapSnapTimer.current)
+    mapSnapTimer.current = window.setTimeout(() => {
+      const nearestIndex = Math.max(
+        0,
+        Math.min(container.children.length - 1, Math.round(container.scrollTop / container.clientHeight)),
+      )
+      const target = container.children[nearestIndex]
+      if (!target) return
+      if (Math.abs(container.scrollTop - target.offsetTop) > 1) {
+        container.scrollTo({ top: target.offsetTop, behavior: 'smooth' })
+      }
+    }, 160)
   }
 
   const currentIndex = Math.max(0, mapOrder.findIndex((section) => section.key === activeKey))
@@ -116,17 +130,21 @@ export default function MapView({ mapTarget, dataVersion }) {
     <div className="relative flex h-full flex-col overflow-hidden bg-[#f4f1e3]">
       <section className="relative h-1/2 min-h-0 shrink-0 border-b-2 border-white bg-[#f4f1e3]" aria-label="フロアマップ">
         <div
-          className="pointer-events-none absolute left-2 top-1.5 z-40 max-w-[54%] rounded-2xl border border-white/80 bg-white/95 px-3 py-2 shadow-md backdrop-blur-sm"
+          className="pointer-events-none absolute left-2 top-1.5 z-40 max-w-[38%] rounded-2xl border border-white/80 bg-white/95 px-3 py-2 shadow-md backdrop-blur-sm"
           aria-live="polite"
         >
           <p className="text-[8px] font-black tracking-[0.16em] text-fest">現在のマップ</p>
           <h2 className="truncate text-lg font-black leading-tight text-ink">{currentMap.label}</h2>
         </div>
-        <div className="pointer-events-none absolute right-2 top-1.5 z-40 flex items-center gap-2 rounded-2xl border border-orange-200 bg-orange-50/95 px-3 py-2 shadow-md backdrop-blur-sm">
-          <p className="text-[11px] font-black leading-tight text-ink">
-            上下にスクロール<br />してフロア移動
-          </p>
-        </div>
+        <button
+          type="button"
+          onClick={() => scrollToSection(mapOrder[currentIndex - 1]?.key)}
+          disabled={currentIndex === 0}
+          className="absolute left-[44%] top-2 z-40 rounded-full border border-orange-200 bg-white/95 px-2.5 py-2 text-[14px] font-black text-fest shadow-md backdrop-blur-sm transition-transform active:scale-95 disabled:pointer-events-none disabled:opacity-30"
+          aria-label="一つ上のマップへ移動"
+        >
+          ▲ 上へ
+        </button>
         <button
           type="button"
           onClick={() => setEditorOpen(true)}
@@ -135,7 +153,6 @@ export default function MapView({ mapTarget, dataVersion }) {
         >
           管理者編集 ✎
         </button>
-
         <div
           ref={mapScroller}
           data-tab-scroll="map"
@@ -155,14 +172,6 @@ export default function MapView({ mapTarget, dataVersion }) {
                 />
               </svg>
             )}
-          </MapSection>
-
-          <MapSection sectionKey={CAMPUS_KEY} label="校舎全体マップ">
-            <CustomMapImage
-              image={customMaps.images[CAMPUS_KEY] || `${import.meta.env.BASE_URL}images/campus-building-guide-dummy.png`}
-              annotations={customMaps.annotations[CAMPUS_KEY]}
-              label="校舎全体"
-            />
           </MapSection>
 
           {floorSections.map(({ building, plan, floor, key }) => (
@@ -185,6 +194,15 @@ export default function MapView({ mapTarget, dataVersion }) {
         </div>
 
         <MapScrollRail currentIndex={currentIndex} total={mapOrder.length} />
+        <button
+          type="button"
+          onClick={() => scrollToSection(mapOrder[currentIndex + 1]?.key)}
+          disabled={currentIndex === mapOrder.length - 1}
+          className="absolute bottom-2 left-1/2 z-40 -translate-x-1/2 rounded-full border border-orange-200 bg-white/95 px-3 py-1 text-[14px] font-black text-fest shadow-md backdrop-blur-sm transition-transform active:scale-95 disabled:pointer-events-none disabled:opacity-30"
+          aria-label="一つ下のマップへ移動"
+        >
+          ▼ 下のマップ
+        </button>
       </section>
 
       <section className="flex min-h-0 flex-1 flex-col bg-white" aria-label="模擬店情報">
@@ -232,7 +250,7 @@ function MapSection({ sectionKey, label, children }) {
   return (
     <section
       data-map-section={sectionKey}
-      className="relative flex h-full min-h-full snap-start snap-always items-center justify-center px-1 pb-3 pt-14"
+      className="relative flex h-full min-h-full snap-start snap-always items-center justify-center px-1 pb-8 pt-20 [scroll-snap-stop:always]"
       aria-label={label}
     >
       {children}
