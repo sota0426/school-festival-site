@@ -104,23 +104,28 @@ export default function MapView({ mapTarget, dataVersion }) {
 
   const currentIndex = Math.max(0, mapOrder.findIndex((section) => section.key === activeKey))
   const currentMap = mapOrder[currentIndex]
-  const nextMap = mapOrder[currentIndex + 1]
   const currentStalls = STALLS.filter((stall) => mapKeyForStall(stall) === activeKey)
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden bg-[#f4f1e3]">
       <section className="relative h-1/2 min-h-0 shrink-0 border-b-2 border-white bg-[#f4f1e3]" aria-label="フロアマップ">
         <div
-          className="pointer-events-none absolute left-2 top-1.5 z-40 max-w-[68%] rounded-2xl border border-white/80 bg-white/95 px-3 py-2 shadow-md backdrop-blur-sm"
+          className="pointer-events-none absolute left-2 top-1.5 z-40 max-w-[54%] rounded-2xl border border-white/80 bg-white/95 px-3 py-2 shadow-md backdrop-blur-sm"
           aria-live="polite"
         >
           <p className="text-[8px] font-black tracking-[0.16em] text-fest">現在のマップ</p>
-          <h2 className="truncate text-xl font-black leading-tight text-ink">{currentMap.label}</h2>
+          <h2 className="truncate text-lg font-black leading-tight text-ink">{currentMap.label}</h2>
+        </div>
+        <div className="pointer-events-none absolute right-2 top-1.5 z-40 flex items-center gap-2 rounded-2xl border border-orange-200 bg-orange-50/95 px-3 py-2 shadow-md backdrop-blur-sm">
+          <span className="text-2xl font-black leading-none text-fest" aria-hidden="true">↕</span>
+          <p className="text-[11px] font-black leading-tight text-ink">
+            上下にスクロール<br />してフロア移動
+          </p>
         </div>
         <button
           type="button"
           onClick={() => setEditorOpen(true)}
-          className="absolute right-1.5 top-1.5 z-40 rounded-lg bg-black/45 px-2 py-1 text-[8px] font-black text-white/90 backdrop-blur-sm active:scale-90"
+          className="absolute right-1.5 top-[4.1rem] z-40 rounded-lg bg-black/45 px-2 py-1 text-[8px] font-black text-white/90 backdrop-blur-sm active:scale-90"
           aria-label="管理者編集を開く"
         >
           管理者編集 ✎
@@ -175,10 +180,6 @@ export default function MapView({ mapTarget, dataVersion }) {
         </div>
 
         <MapScrollRail currentIndex={currentIndex} total={mapOrder.length} />
-        <MapScrollStatus
-          next={nextMap?.label}
-          onNext={nextMap ? () => scrollToSection(nextMap.key) : undefined}
-        />
       </section>
 
       <section className="flex min-h-0 flex-1 flex-col bg-white" aria-label="模擬店情報">
@@ -222,7 +223,7 @@ function MapSection({ sectionKey, label, children }) {
   return (
     <section
       data-map-section={sectionKey}
-      className="relative flex h-full min-h-full snap-start snap-always items-center justify-center px-1 pb-14 pt-12"
+      className="relative flex h-full min-h-full snap-start snap-always items-center justify-center px-1 pb-3 pt-14"
       aria-label={label}
     >
       {children}
@@ -230,31 +231,10 @@ function MapSection({ sectionKey, label, children }) {
   )
 }
 
-function MapScrollStatus({ next, onNext }) {
-  return (
-    <button
-      type="button"
-      onClick={onNext}
-      disabled={!onNext}
-      className="absolute inset-x-3 bottom-1.5 z-30 flex animate-bounce items-center gap-2 rounded-2xl border border-orange-200 bg-white/95 px-3 py-2 text-left shadow-lg shadow-orange-200/50 backdrop-blur-sm transition-transform active:scale-[0.98] disabled:animate-none"
-      aria-label={next ? `次のマップ、${next}へスクロール` : '最後のフロアです'}
-    >
-      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-fest text-base font-black text-white">
-        {next ? '↕' : '↑'}
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-xs font-black text-ink">
-          {next ? '上下にスクロールしてフロア移動' : '最後のフロアです'}
-        </p>
-      </div>
-    </button>
-  )
-}
-
 function MapScrollRail({ currentIndex, total }) {
   const progress = total <= 1 ? 0 : currentIndex / (total - 1)
   return (
-    <div className="pointer-events-none absolute bottom-16 right-1 top-3 z-30 flex w-4 flex-col items-center" aria-hidden="true">
+    <div className="pointer-events-none absolute bottom-3 right-1 top-16 z-30 flex w-4 flex-col items-center" aria-hidden="true">
       <span className="text-[9px] font-black text-fest">▲</span>
       <div className="relative my-1 w-1 flex-1 rounded-full bg-stone-300/80 shadow-inner">
         <span
@@ -326,30 +306,30 @@ function SelectedStallPanel({ stall, onDetail }) {
         <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl text-2xl" style={{ background: cat.soft }}>{cat.emoji}</span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="rounded-full px-2 py-0.5 text-[9px] font-black text-white" style={{ background: cat.color }}>{cat.label}</span>
-            <span className="truncate text-[10px] font-bold text-stone-400">{stall.org}</span>
+            <span className="rounded-full px-2.5 py-1 text-[10px] font-black text-white" style={{ background: cat.color }}>{cat.label}</span>
+            <span className="truncate text-xs font-bold text-stone-500">{stall.org}</span>
           </div>
-          <h2 className="mt-1 truncate text-base font-black text-ink">{stall.name}</h2>
+          <h2 className="mt-1 truncate text-xl font-black text-ink">{stall.name}</h2>
         </div>
       </div>
 
-      <p className="mt-2 text-xs leading-relaxed text-stone-600">{stall.pr}</p>
+      <p className="mt-2 text-sm font-medium leading-relaxed text-stone-600">{stall.pr}</p>
       <div className="mt-3">
-        <p className="text-[9px] font-black tracking-[0.16em] text-fest">MENU</p>
+        <p className="text-[10px] font-black tracking-[0.16em] text-fest">MENU</p>
         {stall.menu.length > 0 ? (
           <ul className="mt-1 divide-y divide-orange-100 rounded-2xl bg-orange-50/60 px-3">
             {stall.menu.map(([item, price], index) => (
               <li key={index} className="flex items-center justify-between gap-3 py-2">
-                <span className="text-xs font-bold text-ink">{item}</span>
-                <span className="shrink-0 text-xs font-black" style={{ color: cat.color }}>{price > 0 ? `¥${price}` : '無料'}</span>
+                <span className="text-sm font-bold text-ink">{item}</span>
+                <span className="shrink-0 text-sm font-black" style={{ color: cat.color }}>{price > 0 ? `¥${price}` : '無料'}</span>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="mt-1 rounded-xl bg-stone-50 px-3 py-2 text-xs font-bold text-stone-500">無料でご覧いただけます</p>
+          <p className="mt-1 rounded-xl bg-stone-50 px-3 py-2 text-sm font-bold text-stone-500">無料でご覧いただけます</p>
         )}
       </div>
-      <button type="button" onClick={onDetail} className="mt-3 w-full rounded-full bg-fest py-2.5 text-xs font-black text-white">
+      <button type="button" onClick={onDetail} className="mt-3 w-full rounded-full bg-fest py-2.5 text-sm font-black text-white">
         ポスター・行き方・フロア図を見る
       </button>
     </div>

@@ -65,7 +65,7 @@ export default function App() {
   return (
     <AppContext.Provider value={ctx}>
       {/* ヘッダー */}
-      <header className="flex shrink-0 items-center gap-2 border-b border-orange-100 bg-white/90 px-2 py-1.5 backdrop-blur">
+      <header className="flex shrink-0 items-center gap-2 border-b border-orange-100 bg-white/90 px-2 py-1.5 pt-2 backdrop-blur">
         <button
           type="button"
           onClick={() => {
