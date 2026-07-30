@@ -17,7 +17,9 @@ export default function BottomSheet({ stall, onClose, onDetail }) {
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h3 className="truncate text-base font-black text-ink">{stall.name}</h3>
+              <h3 className="line-clamp-2 break-words text-base font-black leading-tight text-ink">
+                {stall.name}
+              </h3>
               <span className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold text-white" style={{ background: cat.color }}>
                 {cat.label}
               </span>
@@ -35,12 +37,9 @@ export default function BottomSheet({ stall, onClose, onDetail }) {
           <h4 className="text-sm font-black text-ink">メニュー・料金</h4>
           {stall.menu.length > 0 ? (
             <ul className="mt-2 divide-y divide-orange-100 rounded-2xl bg-orange-50/60 px-4">
-              {stall.menu.map(([item, price], index) => (
-                <li key={index} className="flex items-center justify-between gap-3 py-3">
+              {stall.menu.slice(0, 1).map(([item], index) => (
+                <li key={index} className="py-3">
                   <span className="text-sm font-bold text-ink">{item}</span>
-                  <span className="shrink-0 text-sm font-black" style={{ color: cat.color }}>
-                    {price > 0 ? `¥${price}` : price === 0 ? '無料' : '価格未定'}
-                  </span>
                 </li>
               ))}
             </ul>

@@ -5,7 +5,6 @@ import { STALLS, stallById } from '../../data/stalls'
 import { CATEGORIES } from '../../data/categories'
 import { useApp } from '../../lib/AppContext'
 import { imageFromDb, readMapAnnotations } from '../../lib/mapEditorStorage'
-import AdminEditor from '../admin/AdminEditor'
 import IllustratedCampusMap from './IllustratedCampusMap'
 import FloorMap from './FloorMap'
 
@@ -17,7 +16,6 @@ export default function MapView({ mapTarget, dataVersion }) {
   const [selectedStall, setSelectedStall] = useState(null)
   const [focusedStallId, setFocusedStallId] = useState(null)
   const [activeKey, setActiveKey] = useState(GROUNDS_KEY)
-  const [editorOpen, setEditorOpen] = useState(false)
   const [customMaps, setCustomMaps] = useState({ annotations: {}, images: {} })
   const [stallListScrollByMap, setStallListScrollByMap] = useState({})
   const mapScroller = useRef(null)
@@ -150,14 +148,6 @@ export default function MapView({ mapTarget, dataVersion }) {
         >
           ▲ 上へ
         </button>
-        <button
-          type="button"
-          onClick={() => setEditorOpen(true)}
-          className="absolute right-1.5 top-[4.1rem] z-40 rounded-lg bg-black/45 px-2 py-1 text-[8px] font-black text-white/90 backdrop-blur-sm active:scale-90"
-          aria-label="管理者編集を開く"
-        >
-          管理者編集 ✎
-        </button>
         <div
           ref={mapScroller}
           data-tab-scroll="map"
@@ -253,8 +243,6 @@ export default function MapView({ mapTarget, dataVersion }) {
           )}
         </div>
       </section>
-
-      {editorOpen && <AdminEditor onClose={() => setEditorOpen(false)} />}
     </div>
   )
 }
@@ -355,7 +343,9 @@ function SelectedStallPanel({ stall, onDetail }) {
             <span className="rounded-full px-2.5 py-1 text-[10px] font-black text-white" style={{ background: cat.color }}>{cat.label}</span>
             <span className="truncate text-xs font-bold text-stone-500">{stall.org}</span>
           </div>
-          <h2 className="mt-1 truncate text-xl font-black text-ink">{stall.name}</h2>
+          <h2 className="mt-1 line-clamp-2 break-words text-xl font-black leading-tight text-ink">
+            {stall.name}
+          </h2>
         </div>
       </div>
 
@@ -364,10 +354,9 @@ function SelectedStallPanel({ stall, onDetail }) {
         <p className="text-[10px] font-black tracking-[0.16em] text-fest">MENU</p>
         {stall.menu.length > 0 ? (
           <ul className="mt-1 divide-y divide-orange-100 rounded-2xl bg-orange-50/60 px-3">
-            {stall.menu.map(([item, price], index) => (
-              <li key={index} className="flex items-center justify-between gap-3 py-2">
+            {stall.menu.slice(0, 1).map(([item], index) => (
+              <li key={index} className="py-2">
                 <span className="text-sm font-bold text-ink">{item}</span>
-                <span className="shrink-0 text-sm font-black" style={{ color: cat.color }}>{price > 0 ? `¥${price}` : price === 0 ? '無料' : '価格未定'}</span>
               </li>
             ))}
           </ul>

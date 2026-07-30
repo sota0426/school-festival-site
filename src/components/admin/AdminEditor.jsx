@@ -221,7 +221,6 @@ export default function AdminEditor({ onClose }) {
             <div className="mt-3 space-y-3">
               <AdminField label="店名" value={selected.name} onChange={(name) => updateSelected({ name })} />
               <AdminField label="クラス・団体" value={selected.org} onChange={(org) => updateSelected({ org })} />
-              <AdminField label="場所の表示名" value={selected.placeLabel} onChange={(placeLabel) => updateSelected({ placeLabel })} />
               <label className="block text-[10px] font-black text-stone-400">
                 カテゴリ
                 <select value={selected.cat} onChange={(event) => updateSelected({ cat: event.target.value })} className="mt-1 w-full rounded-xl border border-stone-200 px-3 py-2 text-sm font-black">
@@ -229,8 +228,8 @@ export default function AdminEditor({ onClose }) {
                 </select>
               </label>
               <label className="block text-[10px] font-black text-stone-400">
-                メニュー（商品:金額｜商品:金額）
-                <textarea key={selected.id} defaultValue={menuToText(selected.menu)} onBlur={(event) => updateSelected({ menu: parseMenu(event.target.value) })} rows="3" className="mt-1 w-full rounded-xl border border-stone-200 px-3 py-2 text-xs font-bold outline-none focus:border-fest" />
+                メニュー（1店舗につき1つ）
+                <input key={selected.id} defaultValue={menuToText(selected.menu)} onBlur={(event) => updateSelected({ menu: parseMenu(event.target.value) })} className="mt-1 w-full rounded-xl border border-stone-200 px-3 py-2 text-sm font-bold outline-none focus:border-fest" />
               </label>
               <label className="block text-[10px] font-black text-stone-400">
                 紹介文

@@ -1,7 +1,12 @@
 import { FESTIVAL } from '../config'
 import Access from './Access'
 
-export default function More({ onOpenSurvey, onOpenExitSurvey }) {
+export default function More({
+  onOpenSurvey,
+  onOpenExitSurvey,
+  onOpenMapEditor,
+  mapEditorAvailable,
+}) {
   return (
     <div data-tab-scroll="more" className="flex-1 overflow-y-auto px-4 pb-8 pt-4">
       <section aria-labelledby="visitor-guide-title">
@@ -60,12 +65,21 @@ export default function More({ onOpenSurvey, onOpenExitSurvey }) {
         >
           帰り際アンケートに答える（DEV用）
         </button>
+        {mapEditorAvailable && (
+          <button
+            type="button"
+            onClick={onOpenMapEditor}
+            className="mt-3 w-full rounded-2xl border-2 border-dashed border-stone-300 bg-stone-100 px-4 py-3 text-sm font-black text-stone-700 transition-transform active:scale-[0.98]"
+          >
+            マップ・模擬店の管理者編集（PC用）
+          </button>
+        )}
       </section>
     </div>
   )
 }
 
-function VisitorGuide() {
+export function VisitorGuide() {
   return (
     <div className="mt-4 space-y-3">
       <GuideRow emoji="🕘" title="開催時間" text={`${FESTIVAL.openHours}（${FESTIVAL.dateLabel}）`} />

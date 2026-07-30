@@ -4,7 +4,7 @@ export const FESTIVAL = {
   year: 2026,
   dateISO: '2026-08-30',
   dateLabel: '2026.8.30 SUN',
-  openHours: '9:00〜16:00',
+  openHours: '9:00〜15:00',
   // Google Apps Script WebアプリのURL。未設定なら送信をスキップ(ローカル保存のみ)
   gasUrl: import.meta.env.VITE_SURVEY_GAS_URL || '',
   // 公式Instagramが決まったら、このURLをアカウントURLへ変更してください。
@@ -26,4 +26,11 @@ export const PARKING = {
 export function isFestivalDay(d = new Date()) {
   const [y, m, day] = FESTIVAL.dateISO.split('-').map(Number)
   return d.getFullYear() === y && d.getMonth() === m - 1 && d.getDate() === day
+}
+
+export function isBeforeFestivalDay(d = new Date()) {
+  const [y, m, day] = FESTIVAL.dateISO.split('-').map(Number)
+  const festivalDay = new Date(y, m - 1, day)
+  const targetDay = new Date(d.getFullYear(), d.getMonth(), d.getDate())
+  return targetDay < festivalDay
 }

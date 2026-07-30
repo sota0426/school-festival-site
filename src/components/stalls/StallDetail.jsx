@@ -64,7 +64,9 @@ export default function StallDetail({ stallId }) {
               {stall.org}
             </span>
           </div>
-          <h2 className="mt-2 text-2xl font-black text-ink">{stall.name}</h2>
+          <h2 className="mt-2 line-clamp-2 break-words pr-10 text-2xl font-black leading-tight text-ink">
+            {stall.name}
+          </h2>
           <p className="mt-1 text-sm text-stone-600">{stall.pr}</p>
         </div>
 
@@ -74,12 +76,9 @@ export default function StallDetail({ stallId }) {
             <div className="mt-5">
               <h3 className="text-xs font-black tracking-widest text-stone-400">MENU</h3>
               <ul className="mt-2 divide-y divide-orange-50 rounded-2xl bg-orange-50/50 px-4">
-                {stall.menu.map(([item, price], i) => (
-                  <li key={i} className="flex items-center justify-between py-2.5">
+                {stall.menu.slice(0, 1).map(([item], i) => (
+                  <li key={i} className="py-2.5">
                     <span className="text-sm font-bold text-ink">{item}</span>
-                    <span className="text-sm font-black" style={{ color: cat.color }}>
-                      {price > 0 ? `¥${price}` : price === 0 ? '無料' : '価格未定'}
-                    </span>
                   </li>
                 ))}
               </ul>

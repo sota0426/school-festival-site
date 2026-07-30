@@ -10,11 +10,9 @@ export default function StallList({ dataVersion }) {
   const [foodGenre, setFoodGenre] = useState(null)
   const [organization, setOrganization] = useState('')
   const [organizationMode, setOrganizationMode] = useState(true)
-  const organizations = [...new Set(STALLS.map((stall) => stall.org))]
-
   const list = STALLS.filter((stall) => {
     if (filter && stall.cat !== filter) return false
-    if (organization && stall.org !== organization) return false
+    if (organization && !matchesOrganizationFilter(stall.org, organization)) return false
     return true
   })
   void dataVersion
@@ -132,8 +130,21 @@ export default function StallList({ dataVersion }) {
               className="min-w-0 flex-1 bg-transparent text-xs font-black text-ink outline-none"
               aria-label="クラス・団体で絞り込む"
             >
-              <option value="">選択してください</option>
-              {organizations.map((org) => <option key={org} value={org}>{org}</option>)}
+              <option value="">すべてのクラス・団体</option>
+              <optgroup label="学年">
+                <option value="grade:1">1年</option>
+                <option value="grade:2">2年</option>
+                <option value="grade:3">3年</option>
+              </optgroup>
+              <optgroup label="コース">
+                <option value="course:特">特進コース</option>
+                <option value="course:体">体育コース</option>
+                <option value="course:普">普通コース</option>
+              </optgroup>
+              <optgroup label="団体">
+                <option value="kind:club">部活動</option>
+                <option value="kind:other">その他</option>
+              </optgroup>
             </select>
           </label>
         )}
@@ -206,6 +217,18 @@ export default function StallList({ dataVersion }) {
       )}
     </div>
   )
+}
+
+function matchesOrganizationFilter(org, filterValue) {
+  const classMatch = org.match(/^([体普特])([1-3])(.+)$/)
+  if (filterValue.startsWith('grade:')) return classMatch?.[2] === filterValue.slice('grade:'.length)
+  if (filterValue === 'kind:club') return !classMatch && org.includes('部')
+  if (filterValue === 'kind:other') return !classMatch && !org.includes('部')
+  if (filterValue.startsWith('course:')) {
+    const course = filterValue.slice('course:'.length)
+    return classMatch?.[1] === course
+  }
+  return true
 }
 
 function Chip({

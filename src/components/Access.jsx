@@ -24,7 +24,7 @@ export default function Access({ embedded = false }) {
         </p>
         <p className="text-[13px] font-bold text-stone-500">{PARKING.address}</p>
         <ul className="list-disc pl-5 text-[13px]">
-          <li>利用時間: 8:30〜16:00</li>
+          <li>利用時間: 8:30〜15:00</li>
           <li>会場周辺では徐行運転にご協力ください</li>
         </ul>
 
