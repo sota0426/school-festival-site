@@ -10,6 +10,7 @@ import IllustratedCampusMap from './IllustratedCampusMap'
 import FloorMap from './FloorMap'
 
 const GROUNDS_KEY = 'grounds'
+const CAMPUS_KEY = 'campus'
 
 export default function MapView({ mapTarget, dataVersion }) {
   const { openDetail } = useApp()
@@ -40,6 +41,7 @@ export default function MapView({ mapTarget, dataVersion }) {
 
   const mapOrder = [
     { key: GROUNDS_KEY, label: '敷地内全体' },
+    { key: CAMPUS_KEY, label: '生徒玄関からの校舎案内' },
     ...floorSections,
   ]
 
@@ -175,6 +177,14 @@ export default function MapView({ mapTarget, dataVersion }) {
                 />
               </svg>
             )}
+          </MapSection>
+
+          <MapSection sectionKey={CAMPUS_KEY} label="生徒玄関からの校舎案内図">
+            <CustomMapImage
+              image={customMaps.images[CAMPUS_KEY] || `${import.meta.env.BASE_URL}images/campus-building-guide-dummy.png`}
+              annotations={customMaps.annotations[CAMPUS_KEY]}
+              label="生徒玄関からの校舎案内"
+            />
           </MapSection>
 
           {floorSections.map(({ building, plan, floor, key }) => (
