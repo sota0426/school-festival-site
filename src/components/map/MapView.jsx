@@ -19,6 +19,7 @@ export default function MapView({ mapTarget, dataVersion }) {
   const [activeKey, setActiveKey] = useState(GROUNDS_KEY)
   const [editorOpen, setEditorOpen] = useState(false)
   const [customMaps, setCustomMaps] = useState({ annotations: {}, images: {} })
+  const [stallListScrollByMap, setStallListScrollByMap] = useState({})
   const mapScroller = useRef(null)
   void dataVersion
 
@@ -74,6 +75,11 @@ export default function MapView({ mapTarget, dataVersion }) {
     requestAnimationFrame(() => scrollToSection(key))
   }
 
+  const selectStallFromList = (stall, scrollTop) => {
+    setStallListScrollByMap((current) => ({ ...current, [activeKey]: scrollTop }))
+    showStallOnMap(stall)
+  }
+
   useEffect(() => {
     if (!mapTarget) return
     if (mapTarget.type === 'stall') {
@@ -117,7 +123,6 @@ export default function MapView({ mapTarget, dataVersion }) {
           <h2 className="truncate text-lg font-black leading-tight text-ink">{currentMap.label}</h2>
         </div>
         <div className="pointer-events-none absolute right-2 top-1.5 z-40 flex items-center gap-2 rounded-2xl border border-orange-200 bg-orange-50/95 px-3 py-2 shadow-md backdrop-blur-sm">
-          <span className="text-2xl font-black leading-none text-fest" aria-hidden="true">↕</span>
           <p className="text-[11px] font-black leading-tight text-ink">
             上下にスクロール<br />してフロア移動
           </p>
@@ -186,7 +191,10 @@ export default function MapView({ mapTarget, dataVersion }) {
         <div className="shrink-0 border-b border-orange-100 px-4 py-2">
           <p className="text-[9px] font-black tracking-[0.16em] text-fest">STALLS ON THIS FLOOR</p>
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-black leading-tight text-ink">このフロアの模擬店</h2>
+            <div className="min-w-0">
+              <h2 className="text-lg font-black leading-tight text-ink">このフロアの模擬店</h2>
+              <p className="mt-0.5 truncate text-xs font-bold text-stone-500">{currentMap.label}</p>
+            </div>
             {selectedStall && (
               <button
                 type="button"
@@ -208,7 +216,8 @@ export default function MapView({ mapTarget, dataVersion }) {
             <StallVerticalList
               key={`${activeKey}-${mapTarget?.ts || 'initial'}`}
               stalls={currentStalls}
-              onSelect={showStallOnMap}
+              onSelect={selectStallFromList}
+              initialScrollTop={stallListScrollByMap[activeKey] || 0}
             />
           )}
         </div>
@@ -264,12 +273,18 @@ function CustomMapImage({ image, annotations = [], label }) {
   )
 }
 
-function StallVerticalList({ stalls, onSelect }) {
+function StallVerticalList({ stalls, onSelect, initialScrollTop = 0 }) {
+  const listRef = useRef(null)
+
+  useEffect(() => {
+    listRef.current?.scrollTo({ top: initialScrollTop, behavior: 'auto' })
+  }, [initialScrollTop])
+
   if (stalls.length === 0) {
     return <div className="grid h-full place-items-center px-6 text-center text-xs font-bold text-stone-400">このマップに表示する模擬店はありません</div>
   }
   return (
-    <div data-tab-scroll="map" className="h-full overflow-y-auto px-3 py-2">
+    <div ref={listRef} data-tab-scroll="map" className="h-full overflow-y-auto px-3 py-2">
         <div className="space-y-2">
           {stalls.map((stall) => {
             const cat = CATEGORIES[stall.cat]
@@ -277,7 +292,7 @@ function StallVerticalList({ stalls, onSelect }) {
               <button
                 key={stall.id}
                 type="button"
-                onClick={() => onSelect(stall)}
+                onClick={() => onSelect(stall, listRef.current?.scrollTop || 0)}
                 className="flex w-full items-center gap-3 rounded-2xl border border-stone-100 bg-stone-50 p-3 text-left transition-transform active:scale-[0.98]"
               >
                 <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-xl" style={{ background: cat.soft }}>{cat.emoji}</span>
@@ -321,7 +336,7 @@ function SelectedStallPanel({ stall, onDetail }) {
             {stall.menu.map(([item, price], index) => (
               <li key={index} className="flex items-center justify-between gap-3 py-2">
                 <span className="text-sm font-bold text-ink">{item}</span>
-                <span className="shrink-0 text-sm font-black" style={{ color: cat.color }}>{price > 0 ? `¥${price}` : '無料'}</span>
+                <span className="shrink-0 text-sm font-black" style={{ color: cat.color }}>{price > 0 ? `¥${price}` : price === 0 ? '無料' : '価格未定'}</span>
               </li>
             ))}
           </ul>

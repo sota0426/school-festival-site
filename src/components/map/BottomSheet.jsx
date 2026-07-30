@@ -39,7 +39,7 @@ export default function BottomSheet({ stall, onClose, onDetail }) {
                 <li key={index} className="flex items-center justify-between gap-3 py-3">
                   <span className="text-sm font-bold text-ink">{item}</span>
                   <span className="shrink-0 text-sm font-black" style={{ color: cat.color }}>
-                    {price > 0 ? `¥${price}` : '無料'}
+                    {price > 0 ? `¥${price}` : price === 0 ? '無料' : '価格未定'}
                   </span>
                 </li>
               ))}

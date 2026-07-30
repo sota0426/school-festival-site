@@ -78,7 +78,7 @@ export default function StallDetail({ stallId }) {
                   <li key={i} className="flex items-center justify-between py-2.5">
                     <span className="text-sm font-bold text-ink">{item}</span>
                     <span className="text-sm font-black" style={{ color: cat.color }}>
-                      {price > 0 ? `¥${price}` : '無料'}
+                      {price > 0 ? `¥${price}` : price === 0 ? '無料' : '価格未定'}
                     </span>
                   </li>
                 ))}

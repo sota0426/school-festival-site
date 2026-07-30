@@ -1,61 +1,64 @@
-// 模擬店データ(ダミー30店)。本番はGoogleスプレッドシートからビルド時に生成する。
-// loc: { type:'out', x, y }(全体マップ座標) or { type:'room', building, floor, room }
+// 2026年度 模擬店・展示データ
+// loc: { type:'out', x, y }(敷地全体マップ座標) or { type:'room', building, floor, room }
 // poster: '/images/stalls/s01.webp' または
 // poster: { thumbnail:'/images/stalls/s01-thumb.webp', src:'/images/stalls/s01.webp' }
 // とすると、一覧は軽量版、詳細は高画質版を表示する。
-// org: クラス・部活動・有志グループなどの団体名。foodGenre: フードの小ジャンル。
-// ポスターはスマホで読みやすい横A4比率(297:210)、WebP/JPEG、横1600px程度を推奨。
-// 縦長画像も切り抜かずに全体表示する。
+// 価格は確定資料が届くまで -1（価格未定）とする。
 
 export const DEFAULT_STALLS = [
-  // --- 第1グラウンド(屋外フード) ---
-  { id: 's01', name: '焼きそば鶴', org: '3年A組', cat: 'food', foodGenre: 'meal', loc: { type: 'out', x: 292, y: 438 }, placeLabel: '第1グラウンド', menu: [['焼きそば', 300], ['大盛り', 400]], hours: '10:00〜15:00', pr: '鉄板で焼き上げる伝統の鶴東ソース焼きそば!' },
-  { id: 's02', name: 'たこ焼き番長', org: '3年B組', cat: 'food', foodGenre: 'meal', loc: { type: 'out', x: 350, y: 470 }, placeLabel: '第1グラウンド', menu: [['たこ焼き6個', 350], ['チーズトッピング', 50]], hours: '10:00〜15:00', pr: '外カリ中トロ。行列必至の人気店です。' },
-  { id: 's03', name: 'フランクフルト工房', org: '野球部', cat: 'food', foodGenre: 'meal', loc: { type: 'out', x: 296, y: 512 }, placeLabel: '第1グラウンド', menu: [['フランクフルト', 250], ['チーズドッグ', 350]], hours: '9:30〜15:30', pr: '野球部が心を込めて焼きます。ジューシーさ日本一!' },
-  { id: 's04', name: 'かき氷 ひんやり堂', org: 'サッカー部', cat: 'food', foodGenre: 'sweets', loc: { type: 'out', x: 354, y: 548 }, placeLabel: '第1グラウンド', menu: [['いちご/ブルーハワイ', 200], ['練乳追加', 50]], hours: '10:00〜15:30', pr: '真夏の文化祭はこれがないと始まらない!' },
-  { id: 's05', name: 'チュロスカフェ吹部', org: '吹奏楽部', cat: 'food', foodGenre: 'fried', loc: { type: 'out', x: 428, y: 438 }, placeLabel: '第1グラウンド', menu: [['シナモンチュロス', 300], ['チョコチュロス', 350]], hours: '10:00〜14:30', pr: '演奏の合間に揚げたてをどうぞ♪' },
-  { id: 's06', name: '炭火焼き鳥 PTA亭', org: 'PTA', cat: 'food', foodGenre: 'meal', loc: { type: 'out', x: 470, y: 478 }, placeLabel: '第1グラウンド', menu: [['焼き鳥2本', 300], ['タレ/塩', 0]], hours: '10:30〜15:00', pr: '保護者の本気。炭火の香りに誘われて。' },
-  { id: 's07', name: 'ベビーカステラ三組', org: '3年C組', cat: 'food', foodGenre: 'sweets', loc: { type: 'out', x: 432, y: 520 }, placeLabel: '第1グラウンド', menu: [['10個入り', 300], ['20個入り', 550]], hours: '10:00〜15:00', pr: 'ひとくちサイズの幸せ、揚げたてをどうぞ。' },
-  { id: 's08', name: 'ドリンク&ラムネ売店', org: '生徒会', cat: 'food', foodGenre: 'drink', loc: { type: 'out', x: 472, y: 560 }, placeLabel: '第1グラウンド', menu: [['ラムネ', 150], ['お茶・ジュース', 120]], hours: '9:00〜16:00', pr: '熱中症対策はこまめな水分補給から!' },
-
-  // --- 第2グラウンド(屋外ゲーム) ---
-  { id: 's09', name: '射的 鶴東ガンマン', org: '2年E組', cat: 'game', loc: { type: 'out', x: 812, y: 300 }, placeLabel: '第2グラウンド', menu: [['5発', 200]], hours: '10:00〜15:30', pr: '景品多数!狙いを定めて一攫千金。' },
-  { id: 's10', name: 'スーパーボールすくい', org: '2年F組', cat: 'game', loc: { type: 'out', x: 890, y: 370 }, placeLabel: '第2グラウンド', menu: [['1回', 150]], hours: '10:00〜15:30', pr: '夏祭り気分をもう一度。小さなお子様に大人気。' },
+  // --- 屋外 ---
+  { id: 's03', name: 'もちもちタピオカ', org: '体3A1', cat: 'food', foodGenre: 'drink', loc: { type: 'out', x: 274, y: 424 }, placeLabel: '屋外 外1', menu: [['タピオカ', -1]], hours: '', pr: 'もちもち食感が楽しいタピオカドリンク。散策のお供にどうぞ！' },
+  { id: 's13', name: 'アサイーボウル', org: '普3C2', cat: 'food', foodGenre: 'sweets', loc: { type: 'out', x: 334, y: 424 }, placeLabel: '屋外 外2', menu: [['アサイーボウル', -1]], hours: '', pr: 'フルーツと一緒に楽しむ、彩り豊かなアサイーボウルです。' },
+  { id: 's21', name: 'フリフリポテト', org: '体2C', cat: 'food', foodGenre: 'fried', loc: { type: 'out', x: 394, y: 424 }, placeLabel: '屋外 外3', menu: [['フリフリポテト', -1]], hours: '', pr: '好きな味を選んでフリフリ！揚げたてポテトをお楽しみください。' },
+  { id: 's05', name: '鉄板焼きそば', org: '体3B1', cat: 'food', foodGenre: 'meal', loc: { type: 'out', x: 454, y: 424 }, placeLabel: '屋外 外5', menu: [['焼きそば', -1]], hours: '', pr: '香ばしいソースの香りが食欲をそそる、文化祭定番の焼きそばです。' },
+  { id: 's20', name: 'あつあつたこ焼き', org: '体2B', cat: 'food', foodGenre: 'meal', loc: { type: 'out', x: 274, y: 478 }, placeLabel: '屋外 外6', menu: [['たこ焼き', -1]], hours: '', pr: '外は香ばしく、中はとろっと。あつあつのたこ焼きをどうぞ！' },
+  { id: 's14', name: '焼きたてワッフル', org: '特2A1', cat: 'food', foodGenre: 'sweets', loc: { type: 'out', x: 334, y: 478 }, placeLabel: '屋外 外7', menu: [['ワッフル', -1]], hours: '', pr: '甘い香りの焼きたてワッフルで、ほっとひと息つきませんか？' },
+  { id: 's25', name: 'ほくほくじゃがバター', org: '特1A1', cat: 'food', foodGenre: 'meal', loc: { type: 'out', x: 394, y: 478 }, placeLabel: '屋外 外8', menu: [['じゃがバター', -1]], hours: '', pr: 'ほくほくのじゃがいもとバターの相性が抜群です。' },
+  { id: 's23', name: 'ひんやりかき氷', org: '普2B1', cat: 'food', foodGenre: 'sweets', loc: { type: 'out', x: 454, y: 478 }, placeLabel: '屋外 外9', menu: [['かき氷', -1]], hours: '', pr: '暑い文化祭にぴったり！ひんやりかき氷でクールダウン。' },
+  { id: 's27', name: 'おにぎり処', org: '体1A1', cat: 'food', foodGenre: 'meal', loc: { type: 'out', x: 274, y: 532 }, placeLabel: '屋外 外10', menu: [['おにぎり', -1]], hours: '', pr: '片手で食べやすいおにぎり。校内を巡る前の腹ごしらえにどうぞ。' },
+  { id: 's06', name: 'ふわふわクレープ', org: '体3B2', cat: 'food', foodGenre: 'sweets', loc: { type: 'out', x: 334, y: 532 }, placeLabel: '屋外 外11', menu: [['クレープ', -1]], hours: '', pr: 'もちもちの生地で包んだ、文化祭限定のクレープです。' },
+  { id: 's29', name: 'ソフトクリーム', org: '体1B', cat: 'food', foodGenre: 'sweets', loc: { type: 'out', x: 394, y: 532 }, placeLabel: '屋外 外12', menu: [['ソフトクリーム', -1]], hours: '', pr: 'なめらかで冷たいソフトクリームをお楽しみください。' },
+  { id: 's08', name: '香ばし焼き鳥', org: '普3A1', cat: 'food', foodGenre: 'meal', loc: { type: 'out', x: 454, y: 532 }, placeLabel: '屋外 外13', menu: [['焼き鳥', -1]], hours: '', pr: '香ばしく焼き上げた焼き鳥。食欲をそそる香りが目印です！' },
+  { id: 's31', name: 'ひんやり冷凍フルーツ', org: '普1A', cat: 'food', foodGenre: 'sweets', loc: { type: 'out', x: 274, y: 586 }, placeLabel: '屋外 外14', menu: [['冷凍フルーツ', -1]], hours: '', pr: 'ひんやり爽やかな冷凍フルーツ。気軽に楽しめるデザートです。' },
+  { id: 's18', name: 'ふわふわパンケーキ', org: '体2A1', cat: 'food', foodGenre: 'sweets', loc: { type: 'out', x: 334, y: 586 }, placeLabel: '屋外 外15', menu: [['パンケーキ', -1]], hours: '', pr: 'ふんわり焼き上げたパンケーキで、甘い時間をお届けします。' },
+  { id: 's19', name: 'ジューススタンド', org: '体2A2', cat: 'food', foodGenre: 'drink', loc: { type: 'out', x: 394, y: 586 }, placeLabel: '屋外 外15', menu: [['ジュース', -1]], hours: '', pr: 'パンケーキと一緒に楽しめる、冷たいジュースをご用意します。' },
+  { id: 's10', name: '一本きゅうり', org: '普3B1', cat: 'food', foodGenre: 'snack', loc: { type: 'out', x: 454, y: 586 }, placeLabel: '屋外 外16', menu: [['きゅうり', -1]], hours: '', pr: 'さっぱり食べられる一本きゅうり。食べ歩きにもおすすめです。' },
+  { id: 's11', name: 'つるっと冷うどん', org: '普3B2', cat: 'food', foodGenre: 'meal', loc: { type: 'out', x: 520, y: 438 }, placeLabel: '屋外 外17', menu: [['冷うどん', -1]], hours: '', pr: '暑い日にうれしい、つるっと食べられる冷たいうどんです。' },
+  { id: 's07', name: 'サーターアンダギー', org: '体3C', cat: 'food', foodGenre: 'fried', loc: { type: 'out', x: 520, y: 500 }, placeLabel: '屋外 外18', menu: [['サーターアンダギー', -1]], hours: '', pr: '外はさっくり、中はふんわり。沖縄のおやつを味わってください！' },
+  { id: 's35', name: '教員企画', org: '教員', cat: 'exhibit', loc: { type: 'out', x: 520, y: 562 }, placeLabel: '屋外 外19', menu: [], hours: '', pr: '先生方による企画です。内容は決まり次第お知らせします。' },
+  { id: 's38', name: '美術部作品販売', org: '美術部', cat: 'exhibit', loc: { type: 'out', x: 232, y: 365 }, placeLabel: '中央校舎 玄関前', menu: [], hours: '', pr: '美術部員が制作した作品を販売します。お気に入りの一点を探してみてください。' },
 
   // --- 中央校舎1F ---
-  { id: 's11', name: '縁日コーナー', org: '1年A組', cat: 'game', loc: { type: 'room', building: 'honkan', floor: '1f', room: 'h1-7' }, placeLabel: '中央校舎1F 1年A組', menu: [['輪投げ・くじ 各', 100]], hours: '9:30〜15:30', pr: '初めての文化祭、全力でおもてなしします!' },
-  { id: 's12', name: '写真部作品展', org: '写真部', cat: 'exhibit', loc: { type: 'room', building: 'honkan', floor: '1f', room: 'h1-8' }, placeLabel: '中央校舎1F 1年B組', menu: [], hours: '9:00〜16:00', pr: '一年間の傑作を一挙公開。フォトスポットもあります。' },
-  { id: 's13', name: '書道部 大作展示', org: '書道部', cat: 'exhibit', loc: { type: 'room', building: 'honkan', floor: '1f', room: 'h1-10' }, placeLabel: '中央校舎1F 多目的室', menu: [], hours: '9:00〜16:00', pr: '畳一畳分の大作は圧巻。あなたの名前も書きます。' },
+  { id: 's15', name: 'りんご飴', org: '特2A2', cat: 'food', foodGenre: 'sweets', loc: { type: 'room', building: 'honkan', floor: '1f', room: 'h1-1' }, placeLabel: '中央校舎1F 職員室前', menu: [['りんご飴', -1]], hours: '', pr: 'つやつやの飴で包んだ、見た目にもかわいいりんご飴です。' },
+  { id: 's37', name: '美術部作品展示', org: '美術部', cat: 'exhibit', loc: { type: 'room', building: 'honkan', floor: '1f', room: 'h1-10' }, placeLabel: '中央校舎1F ロビー', menu: [], hours: '', pr: '美術部員が心を込めて制作した作品を展示します。個性豊かな表現をお楽しみください。' },
 
   // --- 中央校舎2F ---
-  { id: 's14', name: 'お化け屋敷「鶴の呪い」', org: '2年A組', cat: 'game', loc: { type: 'room', building: 'honkan', floor: '2f', room: 'h2-1' }, placeLabel: '中央校舎2F 2年A組', menu: [['入場', 100]], hours: '10:00〜15:30', pr: '今年もやります学年最恐。心臓の弱い方はご注意を…' },
-  { id: 's15', name: '謎解き脱出ゲーム', org: '2年B組', cat: 'game', loc: { type: 'room', building: 'honkan', floor: '2f', room: 'h2-2' }, placeLabel: '中央校舎2F 2年B組', menu: [['1チーム', 200]], hours: '10:00〜15:00', pr: '制限時間15分。教室から脱出できるか!?' },
-  { id: 's16', name: '和カフェ 鶴屋', org: '2年C組', cat: 'cafe', loc: { type: 'room', building: 'honkan', floor: '2f', room: 'h2-3' }, placeLabel: '中央校舎2F 2年C組', menu: [['抹茶ラテ', 300], ['白玉あんみつ', 350]], hours: '10:00〜15:30', pr: '和の空間でほっとひと息。浴衣スタッフがお出迎え。' },
-  { id: 's17', name: '科学部プラネタリウム', org: '科学部', cat: 'exhibit', loc: { type: 'room', building: 'honkan', floor: '2f', room: 'h2-6' }, placeLabel: '中央校舎2F 理科室', menu: [['観覧無料', 0]], hours: '上映 毎時00分/30分', pr: '手作りドームで満天の星空を。1回15分の癒やし体験。' },
+  { id: 's34', name: '生徒会オリジナルジュース', org: '生徒会', cat: 'food', foodGenre: 'drink', loc: { type: 'room', building: 'honkan', floor: '2f', room: 'h2-10' }, placeLabel: '中央校舎2F 選択室1', menu: [['オリジナルジュース', -1]], hours: '', pr: '生徒会が考えた文化祭限定のオリジナルジュースをお楽しみください！' },
 
   // --- 中央校舎3F ---
-  { id: 's18', name: 'クレープ喫茶 ふわり', org: '家庭科部', cat: 'cafe', loc: { type: 'room', building: 'honkan', floor: '3f', room: 'h3-6' }, placeLabel: '中央校舎3F 家庭科室', menu: [['チョコバナナ', 350], ['いちごカスタード', 400]], hours: '10:00〜15:00', pr: '生地から手作り。焼きたてもちもちクレープ。' },
-  { id: 's19', name: '鉄道模型ジオラマ運転会', org: '鉄道研究会', cat: 'exhibit', loc: { type: 'room', building: 'honkan', floor: '3f', room: 'h3-2' }, placeLabel: '中央校舎3F 3年B組', menu: [['運転体験', 100]], hours: '9:30〜15:30', pr: '全長10mの大ジオラマ。運転体験は先着順!' },
-  { id: 's20', name: 'eスポーツ体験会', org: 'パソコン部', cat: 'game', loc: { type: 'room', building: 'honkan', floor: '3f', room: 'h3-7' }, placeLabel: '中央校舎3F コンピュータ室', menu: [['体験無料', 0]], hours: '10:00〜15:30', pr: '部員に勝ったら景品あり。初心者大歓迎!' },
-
-  // --- 南校舎1F ---
-  { id: 's21', name: '古本市', org: '図書委員会', cat: 'exhibit', loc: { type: 'room', building: 'minami', floor: '1f', room: 'm1-1' }, placeLabel: '南校舎1F 図書室', menu: [['文庫', 50], ['単行本', 100]], hours: '9:30〜15:30', pr: '掘り出し物多数。売上は図書室の新刊購入に使います。' },
-  { id: 's22', name: '駄菓子屋 とうこう堂', org: '1年D組', cat: 'food', foodGenre: 'snack', loc: { type: 'room', building: 'minami', floor: '1f', room: 'm1-2' }, placeLabel: '南校舎1F 1年D組', menu: [['駄菓子詰め合わせ', 200]], hours: '10:00〜15:30', pr: '昭和レトロな教室で懐かしの駄菓子はいかが?' },
-  { id: 's23', name: 'ボードゲームカフェ', org: '囲碁将棋部', cat: 'game', loc: { type: 'room', building: 'minami', floor: '1f', room: 'm1-7' }, placeLabel: '南校舎1F 食堂', menu: [['30分遊び放題', 100]], hours: '9:30〜15:30', pr: '囲碁・将棋からカードゲームまで50種類!' },
+  { id: 's01', name: 'ベビーカステラ', org: '特3A1', cat: 'food', foodGenre: 'sweets', loc: { type: 'room', building: 'honkan', floor: '3f', room: 'h3-1' }, placeLabel: '中央校舎3F 特1A教室', menu: [['ベビーカステラ', -1]], hours: '', pr: 'ころんとかわいい、ふんわり甘いベビーカステラをどうぞ！' },
+  { id: 's02', name: 'チーズボール', org: '特3A2', cat: 'food', foodGenre: 'fried', loc: { type: 'room', building: 'honkan', floor: '3f', room: 'h3-1' }, placeLabel: '中央校舎3F 特1A教室', menu: [['チーズボール', -1]], hours: '', pr: '外はカリッ、中からチーズがとろり。熱々をお楽しみください。' },
+  { id: 's09', name: 'ホットドッグ', org: '普3A2', cat: 'food', foodGenre: 'meal', loc: { type: 'room', building: 'honkan', floor: '3f', room: 'h3-2' }, placeLabel: '中央校舎3F 特2A教室', menu: [['ホットドッグ', -1]], hours: '', pr: '食べ応えのあるホットドッグ。小腹が空いたときにもぴったりです。' },
+  { id: 's16', name: '揚げたてチュロス', org: '特2B1', cat: 'food', foodGenre: 'fried', loc: { type: 'room', building: 'honkan', floor: '3f', room: 'h3-3' }, placeLabel: '中央校舎3F 特2B教室', menu: [['チュロス', -1]], hours: '', pr: 'さくっと香ばしい揚げたてチュロス。甘い香りを目印にお越しください！' },
+  { id: 's17', name: 'フルーツジュース', org: '特2B2', cat: 'food', foodGenre: 'drink', loc: { type: 'room', building: 'honkan', floor: '3f', room: 'h3-3' }, placeLabel: '中央校舎3F 特2B教室', menu: [['フルーツジュース', -1]], hours: '', pr: 'フルーツのおいしさを楽しめる、爽やかなジュースです。' },
+  { id: 's33', name: 'ちいかわカフェ', org: '普1B2', cat: 'cafe', foodGenre: 'sweets', loc: { type: 'room', building: 'honkan', floor: '3f', room: 'h3-1' }, placeLabel: '中央校舎3F 特3A教室', menu: [['カフェメニュー', -1]], hours: '', pr: 'かわいい世界観に包まれたカフェで、楽しいひとときをお過ごしください。' },
+  { id: 's36', name: '特進コース研究展示', org: '特進コース', cat: 'exhibit', loc: { type: 'room', building: 'honkan', floor: '3f', room: 'h3-9' }, placeLabel: '中央校舎3F 選択室2', menu: [], hours: '', pr: '特進コースで取り組んだ研究成果を展示します。日頃の学びをぜひご覧ください。' },
 
   // --- 南校舎2F ---
-  { id: 's24', name: 'イラスト部展示&似顔絵', org: 'イラスト部', cat: 'exhibit', loc: { type: 'room', building: 'minami', floor: '2f', room: 'm2-1' }, placeLabel: '南校舎2F 2年E組', menu: [['似顔絵', 200]], hours: '10:00〜15:00', pr: '待ち時間10分であなたをアニメ風に描きます!' },
-  { id: 's25', name: 'タピオカスタンド', org: '1年E組', cat: 'cafe', loc: { type: 'room', building: 'minami', floor: '2f', room: 'm2-2' }, placeLabel: '南校舎2F 2年F組', menu: [['ミルクティー', 300], ['黒糖ラテ', 350]], hours: '10:00〜15:00', pr: 'もちもちタピオカ、映えるカップでお待ちしてます。' },
-  { id: 's26', name: 'ミニシアター上映会', org: '映画研究会', cat: 'exhibit', loc: { type: 'room', building: 'minami', floor: '2f', room: 'm2-5' }, placeLabel: '南校舎2F 講義室1', menu: [['観覧無料', 0]], hours: '上映 10:00/12:00/14:00', pr: '部員自主制作の短編3本立て。涙と笑いの30分。' },
+  { id: 's12', name: 'メイドカフェ', org: '普3C1', cat: 'cafe', loc: { type: 'room', building: 'minami', floor: '2f', room: 'm2-2' }, placeLabel: '南校舎2F 普2B教室', menu: [['カフェメニュー', -1]], hours: '', pr: 'いつもの教室が特別なカフェに変身。心を込めてお迎えします！' },
+  { id: 's22', name: 'ミッション制お化け屋敷', org: '普2A', cat: 'game', loc: { type: 'room', building: 'minami', floor: '2f', room: 'm2-1' }, placeLabel: '南校舎2F・3F 普1・普3B・普3C教室', menu: [['入場', -1]], hours: '', pr: '複数の教室を巡り、恐怖のミッションに挑戦！無事に脱出できるでしょうか。' },
+  { id: 's24', name: 'わくわく射的', org: '普2B2', cat: 'game', loc: { type: 'room', building: 'minami', floor: '2f', room: 'm2-6' }, placeLabel: '南校舎2F 選択室4', menu: [['射的', -1]], hours: '', pr: '狙いを定めて景品をゲット！子どもから大人まで楽しめる射的です。' },
+  { id: 's30', name: 'キッキングスナイパー＆ポップコーン', org: '体1C', cat: 'game', loc: { type: 'room', building: 'minami', floor: '2f', room: 'm2-8' }, placeLabel: '南校舎2F 選択室5', menu: [['キッキングスナイパー', -1], ['ポップコーン', -1]], hours: '', pr: 'キックの腕試しに挑戦！遊んだ後はポップコーンもお楽しみください。' },
+  { id: 's32', name: 'ミッション制お化け屋敷', org: '普1B1', cat: 'game', loc: { type: 'room', building: 'minami', floor: '2f', room: 'm2-7' }, placeLabel: '南校舎2F 理科室', menu: [['入場', -1]], hours: '', pr: '不気味な理科室でミッションに挑戦。勇気を出して最後まで進もう！' },
 
-  // --- 北校舎 ---
-  { id: 's27', name: 'わたあめ工場', org: '中学3年A組', cat: 'food', foodGenre: 'sweets', loc: { type: 'room', building: 'chugaku', floor: '1f', room: 'c1-1' }, placeLabel: '北校舎1F 中1A組', menu: [['わたあめ', 200], ['カラフル', 300]], hours: '10:00〜15:00', pr: '虹色わたあめ、写真映え間違いなし!' },
-  { id: 's28', name: 'ポップコーン屋台', org: '中学3年B組', cat: 'food', foodGenre: 'snack', loc: { type: 'room', building: 'chugaku', floor: '1f', room: 'c1-2' }, placeLabel: '北校舎1F 中1B組', menu: [['塩/キャラメル', 250]], hours: '10:00〜15:00', pr: 'できたてポンポン弾ける音もお楽しみ。' },
-  { id: 's29', name: '中学美術部展', org: '中学美術部', cat: 'exhibit', loc: { type: 'room', building: 'chugaku', floor: '2f', room: 'c2-4' }, placeLabel: '北校舎2F 美術室', menu: [], hours: '9:00〜16:00', pr: '中学生の感性が爆発。体験コーナーもあります。' },
-  { id: 's30', name: 'クイズラリー本部', org: '中学生徒会', cat: 'game', loc: { type: 'room', building: 'chugaku', floor: '2f', room: 'c2-5' }, placeLabel: '北校舎2F 多目的室', menu: [['参加無料・景品あり', 0]], hours: '9:30〜15:00', pr: '校内を巡ってクイズに挑戦。全問正解で豪華景品!' },
+  // --- 南校舎3F ---
+  { id: 's04', name: 'チョコバナナ', org: '体3A2', cat: 'food', foodGenre: 'sweets', loc: { type: 'room', building: 'minami', floor: '3f', room: 'm3-1' }, placeLabel: '南校舎3F 体3A教室', menu: [['チョコバナナ', -1]], hours: '', pr: 'バナナとチョコの王道コンビ。見た目も楽しい文化祭スイーツです。' },
+  { id: 's26', name: 'ストラックアウト', org: '特1A2', cat: 'game', loc: { type: 'room', building: 'minami', floor: '3f', room: 'm3-2' }, placeLabel: '南校舎3F 体3B教室', menu: [['ストライクアウト', -1]], hours: '', pr: '的をめがけて全力投球！何枚抜けるか挑戦してみよう。' },
+  { id: 's28', name: '映えスポット', org: '体1A2', cat: 'exhibit', loc: { type: 'room', building: 'minami', floor: '3f', room: 'm3-3' }, placeLabel: '南校舎3F 体3C教室', menu: [], hours: '', pr: '文化祭の思い出を写真に残せるフォトスポットです。お気に入りの一枚をどうぞ！' },
+  { id: 's39', name: 'eスポーツ体験会', org: 'eスポーツ部', cat: 'game', loc: { type: 'room', building: 'minami', floor: '3f', room: 'm3-5' }, placeLabel: '南校舎3F Mラボ', menu: [['体験', -1]], hours: '', pr: '初めての方も大歓迎！仲間と一緒にeスポーツを体験してみませんか？' },
 ]
 
-const STALLS_STORAGE_KEY = 'festival-stalls-v1'
+const STALLS_STORAGE_KEY = 'festival-stalls-v2'
 
 function readSavedStalls() {
   if (typeof window === 'undefined') return null
@@ -81,16 +84,16 @@ export function resetStalls() {
   replaceStalls(DEFAULT_STALLS)
 }
 
-export const stallById = (id) => STALLS.find((s) => s.id === id)
+export const stallById = (id) => STALLS.find((stall) => stall.id === id)
 
 export function stallsInBuilding(buildingId) {
-  return STALLS.filter((s) => s.loc.type === 'room' && s.loc.building === buildingId)
+  return STALLS.filter((stall) => stall.loc.type === 'room' && stall.loc.building === buildingId)
 }
 
 export function stallsOnFloor(buildingId, floorId) {
   return STALLS.filter(
-    (s) => s.loc.type === 'room' && s.loc.building === buildingId && s.loc.floor === floorId,
+    (stall) => stall.loc.type === 'room' && stall.loc.building === buildingId && stall.loc.floor === floorId,
   )
 }
 
-export const outdoorStalls = () => STALLS.filter((s) => s.loc.type === 'out')
+export const outdoorStalls = () => STALLS.filter((stall) => stall.loc.type === 'out')
