@@ -1,7 +1,7 @@
 import { stallById } from '../../data/stalls'
 import { CATEGORIES, FOOD_GENRES } from '../../data/categories'
 import { useApp } from '../../lib/AppContext'
-import { CloseIcon, PinIcon } from '../Icons'
+import { CloseIcon } from '../Icons'
 import StallPoster from './StallPoster'
 import StallLocationGuide from './StallLocationGuide'
 
@@ -70,10 +70,6 @@ export default function StallDetail({ stallId }) {
 
         {/* 本文 */}
         <div className="px-6 py-4 pb-[max(24px,env(safe-area-inset-bottom))]">
-          <div className="space-y-2.5">
-            <InfoRow icon={<PinIcon width="16" height="16" />} label="場所" value={stall.placeLabel} />
-          </div>
-
           {stall.menu.length > 0 && (
             <div className="mt-5">
               <h3 className="text-xs font-black tracking-widest text-stone-400">MENU</h3>
@@ -92,16 +88,6 @@ export default function StallDetail({ stallId }) {
           <StallLocationGuide stall={stall} />
         </div>
       </div>
-    </div>
-  )
-}
-
-function InfoRow({ icon, label, value }) {
-  return (
-    <div className="flex items-center gap-3 rounded-xl bg-stone-50 px-4 py-2.5">
-      <span className="text-stone-400">{icon}</span>
-      <span className="w-16 shrink-0 text-xs font-bold text-stone-400">{label}</span>
-      <span className="text-sm font-bold text-ink">{value}</span>
     </div>
   )
 }

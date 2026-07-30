@@ -22,7 +22,7 @@ export default function BottomSheet({ stall, onClose, onDetail }) {
                 {cat.label}
               </span>
             </div>
-            <p className="text-xs text-stone-500">{stall.org}・{stall.placeLabel}</p>
+            <p className="text-xs text-stone-500">{stall.org}</p>
             <p className="mt-1 text-xs text-stone-600">{stall.pr}</p>
           </div>
           <button type="button" onClick={onClose} aria-label="閉じる" className="shrink-0 rounded-full p-1.5 text-stone-400 transition-colors active:bg-stone-100">

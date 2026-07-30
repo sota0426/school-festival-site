@@ -33,7 +33,6 @@ export default function StallLocationGuide({ stall }) {
               <p className="text-[10px] font-black tracking-[0.16em] text-fest">FLOOR MAP</p>
               <h3 className="text-lg font-black text-ink">{route.building} {route.floor}</h3>
             </div>
-            <span className="rounded-full bg-orange-50 px-3 py-1 text-[11px] font-black text-fest">📍 {route.room}</span>
           </div>
           <div className="mt-2 overflow-hidden rounded-2xl border border-stone-200 bg-[#fbf8ee] shadow-sm">
             <svg viewBox={`0 0 ${FLOOR_VIEW.w} ${FLOOR_VIEW.h}`} className="h-auto w-full" aria-label={`${route.building} ${route.floor}のフロアマップ`}>

@@ -14,7 +14,6 @@ export default function StallList({ dataVersion }) {
 
   const list = STALLS.filter((stall) => {
     if (filter && stall.cat !== filter) return false
-    if (foodGenre && stall.foodGenre !== foodGenre) return false
     if (organization && stall.org !== organization) return false
     return true
   })
@@ -34,15 +33,33 @@ export default function StallList({ dataVersion }) {
     setOrganizationMode(true)
   }
 
+  const scrollToFoodGenre = (id) => {
+    setFoodGenre(id)
+    requestAnimationFrame(() => {
+      document.getElementById(`food-genre-${id}`)?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+    })
+  }
+
   const definitions = [
     { id: 'outdoor', label: '屋外・グラウンド', emoji: '🌳', matches: (stall) => stall.loc.type === 'out' },
     { id: 'honkan', label: '中央校舎', emoji: '🏫', matches: (stall) => stall.loc.building === 'honkan' },
     { id: 'chugaku', label: '北校舎', emoji: '🏫', matches: (stall) => stall.loc.building === 'chugaku' },
     { id: 'minami', label: '南校舎', emoji: '🏫', matches: (stall) => stall.loc.building === 'minami' },
   ]
-  const groups = definitions
-    .map((group) => ({ ...group, stalls: list.filter(group.matches) }))
-    .filter((group) => group.stalls.length > 0)
+  const groups = (filter === 'food'
+    ? FOOD_GENRE_IDS.map((id) => ({
+        id: `food-genre-${id}`,
+        label: FOOD_GENRES[id].label,
+        emoji: FOOD_GENRES[id].emoji,
+        color: FOOD_GENRES[id].color,
+        soft: FOOD_GENRES[id].soft,
+        stalls: list.filter((stall) => stall.foodGenre === id),
+      }))
+    : definitions.map((group) => ({ ...group, stalls: list.filter(group.matches) }))
+  ).filter((group) => group.stalls.length > 0)
 
   return (
     <div className="flex-1 overflow-y-auto">
@@ -63,7 +80,7 @@ export default function StallList({ dataVersion }) {
           />
           <Chip
             icon="👥"
-            label="クラス"
+            label="クラス・団体"
             active={organizationMode}
             color="#4f766b"
             onClick={selectOrganizationMode}
@@ -80,17 +97,29 @@ export default function StallList({ dataVersion }) {
           ))}
         </div>
         {filter === 'food' && (
-          <div className="mt-2 flex gap-2 overflow-x-auto [scrollbar-width:none]" aria-label="フードジャンル">
-            {FOOD_GENRE_IDS.map((id) => (
-              <Chip
-                key={id}
-                icon={FOOD_GENRES[id].emoji}
-                label={FOOD_GENRES[id].label}
-                active={foodGenre === id}
-                color="#d65b26"
-                onClick={() => setFoodGenre(id)}
-              />
-            ))}
+          <div className="mt-3 rounded-2xl border border-orange-200 bg-white/90 p-3 shadow-sm" aria-label="フードの種類">
+            <div className="mb-2 flex items-end justify-between gap-2 border-b border-orange-100 pb-2">
+              <div>
+                <p className="text-[8px] font-black tracking-[0.16em] text-fest">FOOD TYPE NAVIGATION</p>
+                <h2 className="text-sm font-black text-ink">フードの種類へ移動</h2>
+              </div>
+              <p className="text-[8px] font-bold text-stone-400">タップでその場所へ</p>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {FOOD_GENRE_IDS.map((id) => (
+                <Chip
+                  key={id}
+                  icon={FOOD_GENRES[id].emoji}
+                  label={FOOD_GENRES[id].label}
+                  active={foodGenre === id}
+                  color={FOOD_GENRES[id].color}
+                  softColor={FOOD_GENRES[id].soft}
+                  showLabel
+                  fullWidth
+                  onClick={() => scrollToFoodGenre(id)}
+                />
+              ))}
+            </div>
           </div>
         )}
         {organizationMode && (
@@ -114,10 +143,26 @@ export default function StallList({ dataVersion }) {
 
       <div className="space-y-5 px-4 pb-6 pt-2">
         {groups.map((group) => (
-          <section key={group.id} aria-labelledby={`stall-group-${group.id}`}>
+          <section
+            key={group.id}
+            id={group.id}
+            className="scroll-mt-28"
+            aria-labelledby={`stall-group-${group.id}`}
+          >
             <div className="mb-2 flex items-center gap-2 border-b border-orange-100 pb-2">
-              <span className="grid h-8 w-8 place-items-center rounded-full bg-orange-50 text-base">{group.emoji}</span>
-              <h2 id={`stall-group-${group.id}`} className="text-sm font-black text-ink">{group.label}</h2>
+              <span
+                className="grid h-8 w-8 place-items-center rounded-full text-base"
+                style={{ background: group.soft || '#fff7ed' }}
+              >
+                {group.emoji}
+              </span>
+              <h2
+                id={`stall-group-${group.id}`}
+                className="text-sm font-black"
+                style={{ color: group.color || '#33261f' }}
+              >
+                {group.label}
+              </h2>
               <span className="ml-auto rounded-full bg-white px-2.5 py-1 text-[10px] font-black text-stone-400">{group.stalls.length}店</span>
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -145,7 +190,6 @@ export default function StallList({ dataVersion }) {
                         <span className="line-clamp-1 text-[11px] font-bold text-stone-400">{s.org}</span>
                       </div>
                       <h3 className="mt-1.5 text-base font-black leading-snug text-ink">{s.name}</h3>
-                      <p className="mt-1 line-clamp-1 text-xs text-stone-500">📍 {s.placeLabel}</p>
                     </div>
                   </button>
                 )
@@ -164,7 +208,18 @@ export default function StallList({ dataVersion }) {
   )
 }
 
-function Chip({ icon, label, active, color, onClick, alwaysLabel = false }) {
+function Chip({
+  icon,
+  label,
+  active,
+  color,
+  softColor,
+  onClick,
+  alwaysLabel = false,
+  showLabel = false,
+  fullWidth = false,
+}) {
+  const expanded = active || alwaysLabel || showLabel
   return (
     <button
       type="button"
@@ -172,14 +227,17 @@ function Chip({ icon, label, active, color, onClick, alwaysLabel = false }) {
       aria-label={label}
       aria-pressed={active}
       className={`flex h-10 shrink-0 items-center justify-center rounded-full text-xs font-black shadow-sm ring-1 ring-black/5 transition-all active:scale-90 ${
-        active || alwaysLabel ? 'gap-1.5 px-3.5' : 'w-10'
+        expanded ? 'gap-1.5 px-2.5' : 'w-10'
+      } ${fullWidth ? 'w-full' : ''
       }`}
       style={
-        active ? { background: color, color: '#fff' } : { background: '#fff', color: '#6b6255' }
+        active
+          ? { background: color, color: '#fff' }
+          : { background: softColor || '#fff', color: softColor ? color : '#6b6255' }
       }
     >
       <span className={alwaysLabel ? '' : 'text-lg'} aria-hidden="true">{icon}</span>
-      {(active || alwaysLabel) && !alwaysLabel && <span>{label}</span>}
+      {(active || showLabel) && !alwaysLabel && <span className="whitespace-nowrap">{label}</span>}
     </button>
   )
 }

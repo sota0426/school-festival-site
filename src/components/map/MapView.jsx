@@ -110,6 +110,13 @@ export default function MapView({ mapTarget, dataVersion }) {
   return (
     <div className="relative flex h-full flex-col overflow-hidden bg-[#f4f1e3]">
       <section className="relative h-1/2 min-h-0 shrink-0 border-b-2 border-white bg-[#f4f1e3]" aria-label="フロアマップ">
+        <div
+          className="pointer-events-none absolute left-2 top-1.5 z-40 max-w-[68%] rounded-2xl border border-white/80 bg-white/95 px-3 py-2 shadow-md backdrop-blur-sm"
+          aria-live="polite"
+        >
+          <p className="text-[8px] font-black tracking-[0.16em] text-fest">現在のマップ</p>
+          <h2 className="truncate text-xl font-black leading-tight text-ink">{currentMap.label}</h2>
+        </div>
         <button
           type="button"
           onClick={() => setEditorOpen(true)}
@@ -175,16 +182,24 @@ export default function MapView({ mapTarget, dataVersion }) {
 
       <section className="flex min-h-0 flex-1 flex-col bg-white" aria-label="模擬店情報">
         <div className="shrink-0 border-b border-orange-100 px-4 py-2">
-          <h2 className="text-xl font-black leading-tight text-ink">{currentMap.label}</h2>
-          <p className="mt-0.5 text-[10px] font-bold text-stone-400">
-            {currentStalls.length > 0 ? `この場所の模擬店 ${currentStalls.length}店` : 'この場所に模擬店はありません'}
-          </p>
+          <p className="text-[9px] font-black tracking-[0.16em] text-fest">STALLS ON THIS FLOOR</p>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-lg font-black leading-tight text-ink">このフロアの模擬店</h2>
+            {selectedStall && (
+              <button
+                type="button"
+                onClick={() => setSelectedStall(null)}
+                className="shrink-0 rounded-full bg-fest px-4 py-2 text-[11px] font-black text-white shadow-sm transition-transform active:scale-95"
+              >
+                ← 一覧へ
+              </button>
+            )}
+          </div>
         </div>
         <div className="min-h-0 flex-1">
           {selectedStall ? (
             <SelectedStallPanel
               stall={selectedStall}
-              onBack={() => setSelectedStall(null)}
               onDetail={() => openDetail(selectedStall.id)}
             />
           ) : (
@@ -202,7 +217,7 @@ function MapSection({ sectionKey, label, children }) {
   return (
     <section
       data-map-section={sectionKey}
-      className="relative flex h-full min-h-full snap-start snap-always items-center justify-center px-1 pb-14 pt-1"
+      className="relative flex h-full min-h-full snap-start snap-always items-center justify-center px-1 pb-14 pt-12"
       aria-label={label}
     >
       {children}
@@ -283,7 +298,7 @@ function StallVerticalList({ stalls, onSelect }) {
                 <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-xl" style={{ background: cat.soft }}>{cat.emoji}</span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-black text-ink">{stall.name}</span>
-                  <span className="block truncate text-[11px] font-bold text-stone-500">{stall.org} · 📍 {stall.placeLabel}</span>
+                  <span className="block truncate text-[11px] font-bold text-stone-500">{stall.org}</span>
                 </span>
                 <span className="text-sm font-black text-fest">›</span>
               </button>
@@ -298,7 +313,7 @@ function mapKeyForStall(stall) {
   return stall.loc.type === 'out' ? GROUNDS_KEY : `${stall.loc.building}-${stall.loc.floor}`
 }
 
-function SelectedStallPanel({ stall, onBack, onDetail }) {
+function SelectedStallPanel({ stall, onDetail }) {
   const cat = CATEGORIES[stall.cat]
   return (
     <div className="flex h-full flex-col overflow-y-auto px-4 py-3">
@@ -310,9 +325,7 @@ function SelectedStallPanel({ stall, onBack, onDetail }) {
             <span className="truncate text-[10px] font-bold text-stone-400">{stall.org}</span>
           </div>
           <h2 className="mt-1 truncate text-base font-black text-ink">{stall.name}</h2>
-          <p className="truncate text-[11px] font-bold text-stone-500">📍 {stall.placeLabel}</p>
         </div>
-        <button type="button" onClick={onBack} className="shrink-0 rounded-full bg-stone-100 px-3 py-2 text-[10px] font-black text-stone-600">一覧へ</button>
       </div>
 
       <p className="mt-2 text-xs leading-relaxed text-stone-600">{stall.pr}</p>

@@ -53,7 +53,7 @@ export default function App() {
             setTab('map')
             setMapTarget({ type: 'point', ts: Date.now() })
           }}
-          className="shrink-0 bg-gradient-to-r from-fest to-fest2 bg-clip-text px-1 text-base font-black text-transparent transition-transform active:scale-95"
+          className="shrink-0 bg-gradient-to-r from-fest to-fest2 bg-clip-text px-1 text-xl font-black text-transparent transition-transform active:scale-95"
           aria-label="鶴東祭 キャンパスマップへ戻る"
         >
           {FESTIVAL.name}
