@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { CAMPUS } from '../../data/campus'
 import { CATEGORIES } from '../../data/categories'
-import { FLOOR_PLANS, FLOOR_VIEW } from '../../data/floors'
+import { DEFAULT_FLOOR_MAPS, FLOOR_PLANS, FLOOR_VIEW, VISIBLE_FLOOR_KEYS } from '../../data/floors'
 import { STALLS, replaceStalls } from '../../data/stalls'
 import {
   downloadCsvTemplate,
@@ -13,8 +13,6 @@ import {
 } from '../../lib/festivalData'
 import { readMapAnnotations, saveMapAnnotations } from '../../lib/mapEditorStorage'
 import { CloseIcon } from '../Icons'
-import FloorMap from '../map/FloorMap'
-import MapEditor from '../map/MapEditor'
 
 const ADMIN_PASSWORD = '1234'
 const AUTH_KEY = 'festival-admin-auth'
@@ -22,13 +20,15 @@ const AUTH_KEY = 'festival-admin-auth'
 const PIN_MAPS = [
   { key: 'grounds', label: '敷地内全体', type: 'out' },
   ...Object.entries(FLOOR_PLANS).flatMap(([building, plan]) =>
-    plan.floors.map((floor) => ({
-      key: `${building}-${floor.id}`,
-      label: `${plan.name} ${floor.label}`,
-      type: 'room',
-      building,
-      floor: floor.id,
-    })),
+    plan.floors
+      .map((floor) => ({
+        key: `${building}-${floor.id}`,
+        label: `${plan.name} ${floor.label}`,
+        type: 'room',
+        building,
+        floor: floor.id,
+      }))
+      .filter((map) => VISIBLE_FLOOR_KEYS.has(map.key)),
   ),
 ]
 
@@ -36,7 +36,6 @@ export default function AdminEditor({ onClose }) {
   const [authenticated, setAuthenticated] = useState(() => sessionStorage.getItem(AUTH_KEY) === 'ok')
   const [password, setPassword] = useState('')
   const [authError, setAuthError] = useState('')
-  const [showMapEditor, setShowMapEditor] = useState(false)
   const [stalls, setStalls] = useState(() => structuredClone(STALLS))
   const [mapKey, setMapKey] = useState('grounds')
   const [selectedId, setSelectedId] = useState(STALLS[0]?.id || '')
@@ -170,8 +169,6 @@ export default function AdminEditor({ onClose }) {
     )
   }
 
-  if (showMapEditor) return <MapEditor onClose={() => setShowMapEditor(false)} />
-
   return (
     <div className="fixed inset-0 z-[100] flex flex-col bg-[#f4f1e3]">
       <header className="flex shrink-0 items-center gap-2 border-b border-orange-100 bg-white px-3 py-2">
@@ -179,7 +176,6 @@ export default function AdminEditor({ onClose }) {
           <p className="text-[9px] font-black tracking-wider text-fest">ADMIN EDITOR</p>
           <h2 className="truncate text-base font-black text-ink">模擬店・ピン管理</h2>
         </div>
-        <button type="button" onClick={() => setShowMapEditor(true)} className="rounded-full bg-stone-100 px-3 py-2 text-[10px] font-black text-stone-600">校内図編集</button>
         <button type="button" onClick={onClose} className="rounded-full bg-stone-100 p-2 text-stone-500" aria-label="閉じる"><CloseIcon width="18" height="18" /></button>
       </header>
 
@@ -244,15 +240,20 @@ export default function AdminEditor({ onClose }) {
 }
 
 function PinCanvas({ map, stalls, selectedId, onPlace }) {
-  const aspectRatio = map.type === 'out' ? `${CAMPUS.w} / ${CAMPUS.h}` : `${FLOOR_VIEW.w} / ${FLOOR_VIEW.h}`
+  const aspectRatio = map.type === 'out' ? `${CAMPUS.w} / ${CAMPUS.h}` : '16 / 9'
+  const floorImage = map.type === 'room' ? DEFAULT_FLOOR_MAPS[map.key] : null
   return (
     <div onClick={onPlace} className="relative mx-auto w-full cursor-crosshair overflow-hidden rounded-2xl border-2 border-fest bg-white shadow-inner" style={{ aspectRatio }}>
       {map.type === 'out' ? (
         <img src={`${import.meta.env.BASE_URL}images/campus-overall.png`} alt="敷地内全体" className="pointer-events-none h-full w-full object-cover" />
+      ) : floorImage ? (
+        <img
+          src={`${import.meta.env.BASE_URL}${floorImage}`}
+          alt={`${map.label}のフロア図`}
+          className="pointer-events-none h-full w-full object-contain"
+        />
       ) : (
-        <svg viewBox={`0 0 ${FLOOR_VIEW.w} ${FLOOR_VIEW.h}`} className="pointer-events-none h-full w-full">
-          <FloorMap buildingId={map.building} floorId={map.floor} onPinTap={() => {}} showPins={false} />
-        </svg>
+        <div className="grid h-full place-items-center text-sm font-bold text-stone-400">フロア図がありません</div>
       )}
       {stalls.map((stall) => {
         const x = map.type === 'out' ? stall.loc.x / CAMPUS.w * 100 : (stall.loc.pinX ?? FLOOR_VIEW.w / 2) / FLOOR_VIEW.w * 100

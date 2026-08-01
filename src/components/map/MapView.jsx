@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { BUILDINGS, CAMPUS } from '../../data/campus'
-import { FLOOR_PLANS, FLOOR_VIEW } from '../../data/floors'
+import { DEFAULT_FLOOR_MAPS, FLOOR_PLANS, FLOOR_VIEW, VISIBLE_FLOOR_KEYS } from '../../data/floors'
 import { STALLS, stallById } from '../../data/stalls'
 import { CATEGORIES } from '../../data/categories'
 import { useApp } from '../../lib/AppContext'
-import { imageFromDb, readMapAnnotations } from '../../lib/mapEditorStorage'
+import { readMapAnnotations } from '../../lib/mapEditorStorage'
 import IllustratedCampusMap from './IllustratedCampusMap'
 import FloorMap from './FloorMap'
 
@@ -16,23 +16,26 @@ export default function MapView({ mapTarget, dataVersion }) {
   const [selectedStall, setSelectedStall] = useState(null)
   const [focusedStallId, setFocusedStallId] = useState(null)
   const [activeKey, setActiveKey] = useState(GROUNDS_KEY)
-  const [customMaps, setCustomMaps] = useState({ annotations: {}, images: {} })
+  const [mapAnnotations, setMapAnnotations] = useState(readMapAnnotations)
   const [stallListScrollByMap, setStallListScrollByMap] = useState({})
   const mapScroller = useRef(null)
   const mapSnapTimer = useRef(null)
+  const pendingDetailMapKey = useRef(null)
   void dataVersion
 
   const floorSections = useMemo(
     () => BUILDINGS.flatMap((building) => {
       const plan = FLOOR_PLANS[building.id]
       if (!plan) return []
-      return plan.floors.map((floor) => ({
-        key: `${building.id}-${floor.id}`,
-        building,
-        plan,
-        floor,
-        label: `${plan.name} · ${floor.label}`,
-      }))
+      return plan.floors
+        .map((floor) => ({
+          key: `${building.id}-${floor.id}`,
+          building,
+          plan,
+          floor,
+          label: `${plan.name} · ${floor.label}`,
+        }))
+        .filter((section) => VISIBLE_FLOOR_KEYS.has(section.key))
     }),
     [],
   )
@@ -43,20 +46,13 @@ export default function MapView({ mapTarget, dataVersion }) {
     ...floorSections,
   ]
 
-  const reloadCustomMaps = async () => {
-    const keys = mapOrder.map((section) => section.key)
-    const loadedImages = await Promise.all(keys.map(async (key) => [key, await imageFromDb(key)]))
-    setCustomMaps({
-      annotations: readMapAnnotations(),
-      images: Object.fromEntries(loadedImages.filter(([, value]) => value)),
-    })
-  }
+  const reloadMapAnnotations = () => setMapAnnotations(readMapAnnotations())
 
   useEffect(() => {
-    reloadCustomMaps()
-    window.addEventListener('festival-map-editor-save', reloadCustomMaps)
+    reloadMapAnnotations()
+    window.addEventListener('festival-map-editor-save', reloadMapAnnotations)
     return () => {
-      window.removeEventListener('festival-map-editor-save', reloadCustomMaps)
+      window.removeEventListener('festival-map-editor-save', reloadMapAnnotations)
       window.clearTimeout(mapSnapTimer.current)
     }
     // Map keys are static for this build.
@@ -103,7 +99,10 @@ export default function MapView({ mapTarget, dataVersion }) {
     const key = container.children[sectionIndex]?.dataset.mapSection
     if (key) {
       setActiveKey(key)
-      if (selectedStall && mapKeyForStall(selectedStall) !== key) {
+      const detailNavigationTarget = pendingDetailMapKey.current
+      const isDetailNavigation = Boolean(detailNavigationTarget)
+      if (detailNavigationTarget === key) pendingDetailMapKey.current = null
+      if (!isDetailNavigation && selectedStall && mapKeyForStall(selectedStall) !== key) {
         setSelectedStall(null)
         setFocusedStallId(null)
       }
@@ -125,6 +124,27 @@ export default function MapView({ mapTarget, dataVersion }) {
   const currentIndex = Math.max(0, mapOrder.findIndex((section) => section.key === activeKey))
   const currentMap = mapOrder[currentIndex]
   const currentStalls = STALLS.filter((stall) => mapKeyForStall(stall) === activeKey)
+  const navigableStalls = mapOrder.flatMap(({ key }) =>
+    STALLS.filter((stall) => mapKeyForStall(stall) === key),
+  )
+  const selectedStallIndex = selectedStall
+    ? navigableStalls.findIndex((stall) => stall.id === selectedStall.id)
+    : -1
+
+  const moveSelectedStall = (offset) => {
+    const requestedIndex = selectedStallIndex + offset
+    const nextIndex = offset > 0 && requestedIndex >= navigableStalls.length ? 0 : requestedIndex
+    const nextStall = navigableStalls[nextIndex]
+    if (!nextStall) return
+    const nextMapKey = mapKeyForStall(nextStall)
+    setSelectedStall(nextStall)
+    setFocusedStallId(nextStall.id)
+    if (nextMapKey !== activeKey) {
+      pendingDetailMapKey.current = nextMapKey
+      setActiveKey(nextMapKey)
+      requestAnimationFrame(() => scrollToSection(nextMapKey))
+    }
+  }
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden bg-[#f4f1e3]">
@@ -156,31 +176,31 @@ export default function MapView({ mapTarget, dataVersion }) {
           aria-label="学校全体と全校舎のフロアマップ"
         >
           <MapSection sectionKey={GROUNDS_KEY} label="敷地内全体マップ">
-            {customMaps.images[GROUNDS_KEY] ? (
-              <CustomMapImage image={customMaps.images[GROUNDS_KEY]} annotations={customMaps.annotations[GROUNDS_KEY]} label="敷地内全体" />
-            ) : (
-              <svg viewBox={`0 0 ${CAMPUS.w} ${CAMPUS.h}`} className="h-full w-full" preserveAspectRatio="xMidYMid meet">
-                <IllustratedCampusMap
-                  selectedStallId={focusedStallId}
-                  animationKey={activeKey === GROUNDS_KEY ? activeKey : 'inactive'}
-                  onPinTap={showStallOnMap}
-                />
-              </svg>
-            )}
+            <svg viewBox={`0 0 ${CAMPUS.w} ${CAMPUS.h}`} className="h-full w-full" preserveAspectRatio="xMidYMid meet">
+              <IllustratedCampusMap
+                selectedStallId={focusedStallId}
+                animationKey={activeKey === GROUNDS_KEY ? activeKey : 'inactive'}
+                onPinTap={showStallOnMap}
+              />
+            </svg>
           </MapSection>
 
           <MapSection sectionKey={CAMPUS_KEY} label="生徒玄関からの校舎案内図">
             <CustomMapImage
-              image={customMaps.images[CAMPUS_KEY] || `${import.meta.env.BASE_URL}images/campus-building-guide-dummy.png`}
-              annotations={customMaps.annotations[CAMPUS_KEY]}
+              image={`${import.meta.env.BASE_URL}images/campus-building-guide.webp?v=3`}
+              annotations={mapAnnotations[CAMPUS_KEY]}
               label="生徒玄関からの校舎案内"
             />
           </MapSection>
 
           {floorSections.map(({ building, plan, floor, key }) => (
             <MapSection key={key} sectionKey={key} label={`${plan.name} ${floor.label}`}>
-              {customMaps.images[key] ? (
-                <CustomMapImage image={customMaps.images[key]} annotations={customMaps.annotations[key]} label={`${plan.name} ${floor.label}`} />
+              {DEFAULT_FLOOR_MAPS[key] ? (
+                <CustomMapImage
+                  image={`${import.meta.env.BASE_URL}${DEFAULT_FLOOR_MAPS[key]}`}
+                  annotations={mapAnnotations[key]}
+                  label={`${plan.name} ${floor.label}`}
+                />
               ) : (
                 <svg viewBox={`0 0 ${FLOOR_VIEW.w} ${FLOOR_VIEW.h}`} className="max-h-full w-full drop-shadow-sm" preserveAspectRatio="xMidYMid meet">
                   <FloorMap
@@ -217,13 +237,33 @@ export default function MapView({ mapTarget, dataVersion }) {
               <p className="mt-0.5 truncate text-xs font-bold text-stone-500">{currentMap.label}</p>
             </div>
             {selectedStall && (
-              <button
-                type="button"
-                onClick={() => setSelectedStall(null)}
-                className="shrink-0 rounded-full bg-fest px-4 py-2 text-[11px] font-black text-white shadow-sm transition-transform active:scale-95"
-              >
-                ← 一覧へ
-              </button>
+              <div className="flex shrink-0 items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setSelectedStall(null)}
+                  className="rounded-full bg-fest px-3 py-2 text-[11px] font-black text-white shadow-sm transition-transform active:scale-95"
+                >
+                  ← 一覧へ
+                </button>
+                <button
+                  type="button"
+                  onClick={() => moveSelectedStall(-1)}
+                  disabled={selectedStallIndex <= 0}
+                  className="rounded-full bg-stone-100 px-3 py-2 text-[11px] font-black text-stone-600 transition-transform active:scale-95 disabled:pointer-events-none disabled:opacity-35"
+                  aria-label="前の模擬店を見る"
+                >
+                  前へ
+                </button>
+                <button
+                  type="button"
+                  onClick={() => moveSelectedStall(1)}
+                  disabled={selectedStallIndex < 0}
+                  className="rounded-full bg-stone-100 px-3 py-2 text-[11px] font-black text-stone-600 transition-transform active:scale-95 disabled:pointer-events-none disabled:opacity-35"
+                  aria-label={selectedStallIndex >= navigableStalls.length - 1 ? '最初の模擬店へ戻る' : '次の模擬店を見る'}
+                >
+                  {selectedStallIndex >= navigableStalls.length - 1 ? '最初へ戻る' : '次へ'}
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -277,8 +317,8 @@ function MapScrollRail({ currentIndex, total }) {
 
 function CustomMapImage({ image, annotations = [], label }) {
   return (
-    <div className="relative mx-auto aspect-[4/3] max-h-full w-full overflow-hidden rounded-2xl bg-white shadow-sm">
-      <img src={image} alt={`${label}の登録済みマップ`} className="h-full w-full object-contain" />
+    <div className="relative mx-auto aspect-video max-h-full w-full overflow-hidden rounded-2xl bg-white shadow-sm">
+      <img src={image} alt={`${label}のフロアマップ`} loading="lazy" decoding="async" className="h-full w-full object-contain" />
       {annotations.map((item) => (
         <div
           key={item.id}

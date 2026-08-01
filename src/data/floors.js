@@ -3,6 +3,29 @@
 
 export const FLOOR_VIEW = { w: 900, h: 430 }
 
+// 今年度の来場者マップに表示するフロア。北校舎のデータは来年度用に
+// FLOOR_PLANS 内へ残しつつ、一覧からは除外する。
+export const VISIBLE_FLOOR_KEYS = new Set([
+  'honkan-2f',
+  'honkan-3f',
+  'minami-2f',
+  'minami-3f',
+  'minami-4f',
+])
+
+// PowerPointから書き出した図面をWeb向けWebPへ変換した既定画像。
+// 北校舎分も将来の再表示に備えて保持する。
+export const DEFAULT_FLOOR_MAPS = {
+  'honkan-2f': 'images/floors/central-2f.webp?v=2',
+  'honkan-3f': 'images/floors/central-3f.webp?v=2',
+  'minami-2f': 'images/floors/south-2f.webp?v=2',
+  'minami-3f': 'images/floors/south-3f.webp?v=2',
+  'minami-4f': 'images/floors/south-4f.webp?v=2',
+  'chugaku-1f': 'images/floors/north-1f.webp?v=2',
+  'chugaku-2f': 'images/floors/north-2f.webp?v=2',
+  'chugaku-3f': 'images/floors/north-3f.webp?v=2',
+}
+
 const ROOM_W = 128
 const ROOM_H = 112
 const GAP = 8

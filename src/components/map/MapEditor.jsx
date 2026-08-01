@@ -1,20 +1,27 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { FLOOR_PLANS } from '../../data/floors'
-import { imageFromDb, readMapAnnotations, saveImageToDb, saveMapAnnotations } from '../../lib/mapEditorStorage'
+import { useMemo, useRef, useState } from 'react'
+import { DEFAULT_FLOOR_MAPS, FLOOR_PLANS, VISIBLE_FLOOR_KEYS } from '../../data/floors'
+import { readMapAnnotations, saveMapAnnotations } from '../../lib/mapEditorStorage'
 import { CloseIcon } from '../Icons'
 
 const MAPS = [
   { key: 'grounds', label: '敷地内全体' },
   { key: 'campus', label: '校舎全体' },
   ...Object.entries(FLOOR_PLANS).flatMap(([buildingId, plan]) =>
-    plan.floors.map((floor) => ({ key: `${buildingId}-${floor.id}`, label: `${plan.name} ${floor.label}` })),
+    plan.floors
+      .map((floor) => ({ key: `${buildingId}-${floor.id}`, label: `${plan.name} ${floor.label}` }))
+      .filter((map) => VISIBLE_FLOOR_KEYS.has(map.key)),
   ),
 ]
+
+function editorMapImage(mapKey) {
+  if (mapKey === 'grounds') return `${import.meta.env.BASE_URL}images/campus-overall.png`
+  if (mapKey === 'campus') return `${import.meta.env.BASE_URL}images/campus-building-guide.webp?v=3`
+  return DEFAULT_FLOOR_MAPS[mapKey] ? `${import.meta.env.BASE_URL}${DEFAULT_FLOOR_MAPS[mapKey]}` : null
+}
 
 export default function MapEditor({ onClose }) {
   const [mapKey, setMapKey] = useState('grounds')
   const [allAnnotations, setAllAnnotations] = useState(readMapAnnotations)
-  const [imageUrl, setImageUrl] = useState(null)
   const [selectedId, setSelectedId] = useState(null)
   const [addMode, setAddMode] = useState(false)
   const [saved, setSaved] = useState(true)
@@ -25,13 +32,7 @@ export default function MapEditor({ onClose }) {
   const selected = annotations.find((item) => item.id === selectedId)
   const mapLabel = MAPS.find((item) => item.key === mapKey)?.label
 
-  useEffect(() => {
-    let active = true
-    imageFromDb(mapKey).then((value) => {
-      if (active) setImageUrl(value || (mapKey === 'campus' ? `${import.meta.env.BASE_URL}images/campus-building-guide-dummy.png` : null))
-    })
-    return () => { active = false }
-  }, [mapKey])
+  const imageUrl = editorMapImage(mapKey)
 
   const setAnnotations = (next) => {
     setAllAnnotations((current) => ({ ...current, [mapKey]: typeof next === 'function' ? next(current[mapKey] || []) : next }))
@@ -89,16 +90,6 @@ export default function MapEditor({ onClose }) {
     setSaved(true)
   }
 
-  const uploadImage = (file) => {
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = async () => {
-      await saveImageToDb(mapKey, reader.result)
-      setImageUrl(reader.result)
-    }
-    reader.readAsDataURL(file)
-  }
-
   const exportJson = () => {
     const blob = new Blob([JSON.stringify(allAnnotations, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
@@ -139,10 +130,6 @@ export default function MapEditor({ onClose }) {
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-3 md:flex-row md:gap-4">
         <main className="min-h-[52dvh] flex-1">
           <div className="mb-2 flex flex-wrap items-center gap-2">
-            <label className="cursor-pointer rounded-full bg-white px-3 py-2 text-xs font-black text-stone-600 shadow-sm">
-              🖼 画像を選択
-              <input type="file" accept="image/*" className="hidden" onChange={(event) => uploadImage(event.target.files?.[0])} />
-            </label>
             <button type="button" onClick={() => setAddMode((value) => !value)} className={`rounded-full px-3 py-2 text-xs font-black shadow-sm ${addMode ? 'bg-fest text-white' : 'bg-white text-stone-600'}`}>
               {addMode ? '画像上をタップ' : '＋ 教室を追加'}
             </button>
@@ -155,12 +142,12 @@ export default function MapEditor({ onClose }) {
             onPointerMove={moveDrag}
             onPointerUp={() => { drag.current = null }}
             onPointerCancel={() => { drag.current = null }}
-            className={`relative mx-auto aspect-[4/3] max-h-[65dvh] w-full overflow-hidden rounded-2xl border-2 bg-white shadow-inner ${addMode ? 'cursor-crosshair border-fest' : 'border-stone-200'}`}
+            className={`relative mx-auto ${mapKey === 'grounds' ? 'aspect-[4/3]' : 'aspect-video'} max-h-[65dvh] w-full overflow-hidden rounded-2xl border-2 bg-white shadow-inner ${addMode ? 'cursor-crosshair border-fest' : 'border-stone-200'}`}
           >
             {imageUrl ? (
               <img src={imageUrl} alt={`${mapLabel}の編集用背景`} className="pointer-events-none h-full w-full object-contain" />
             ) : (
-              <div className="grid h-full place-items-center px-8 text-center text-sm font-bold text-stone-400">「画像を選択」から{mapLabel}の地図を登録してください</div>
+              <div className="grid h-full place-items-center px-8 text-center text-sm font-bold text-stone-400">{mapLabel}の背景画像がありません</div>
             )}
             {annotations.map((item) => (
               <button
