@@ -11,6 +11,11 @@ import FloorMap from './FloorMap'
 const GROUNDS_KEY = 'grounds'
 const CAMPUS_KEY = 'campus'
 
+const MAP_TONES = {
+  honkan: { background: '#eaf6e5', border: '#9dcf8d', badge: '#f1faed' },
+  minami: { background: '#fff0e6', border: '#efb28d', badge: '#fff5ee' },
+}
+
 export default function MapView({ mapTarget, dataVersion }) {
   const { openDetail } = useApp()
   const [selectedStall, setSelectedStall] = useState(null)
@@ -42,7 +47,7 @@ export default function MapView({ mapTarget, dataVersion }) {
 
   const mapOrder = [
     { key: GROUNDS_KEY, label: '敷地内全体' },
-    { key: CAMPUS_KEY, label: '生徒玄関からの校舎案内' },
+    { key: CAMPUS_KEY, label: '校舎案内' },
     ...floorSections,
   ]
 
@@ -123,6 +128,7 @@ export default function MapView({ mapTarget, dataVersion }) {
 
   const currentIndex = Math.max(0, mapOrder.findIndex((section) => section.key === activeKey))
   const currentMap = mapOrder[currentIndex]
+  const currentTone = MAP_TONES[currentMap.building?.id]
   const currentStalls = STALLS.filter((stall) => mapKeyForStall(stall) === activeKey)
   const navigableStalls = mapOrder.flatMap(({ key }) =>
     STALLS.filter((stall) => mapKeyForStall(stall) === key),
@@ -154,6 +160,7 @@ export default function MapView({ mapTarget, dataVersion }) {
       >
         <div
           className="pointer-events-none absolute left-2 top-1.5 z-40 max-w-[38%] rounded-2xl border border-white/80 bg-white/95 px-3 py-2 shadow-md backdrop-blur-sm"
+          style={currentTone ? { backgroundColor: currentTone.badge, borderColor: currentTone.border } : undefined}
           aria-live="polite"
         >
           <p className="text-[8px] font-black tracking-[0.16em] text-fest">現在のマップ</p>
@@ -185,21 +192,24 @@ export default function MapView({ mapTarget, dataVersion }) {
             </svg>
           </MapSection>
 
-          <MapSection sectionKey={CAMPUS_KEY} label="生徒玄関からの校舎案内図">
+          <MapSection sectionKey={CAMPUS_KEY} label="校舎案内図">
             <CustomMapImage
               image={`${import.meta.env.BASE_URL}images/campus-building-guide.webp?v=3`}
               annotations={mapAnnotations[CAMPUS_KEY]}
-              label="生徒玄関からの校舎案内"
+              label="校舎案内"
             />
           </MapSection>
 
-          {floorSections.map(({ building, plan, floor, key }) => (
-            <MapSection key={key} sectionKey={key} label={`${plan.name} ${floor.label}`}>
+          {floorSections.map(({ building, plan, floor, key }) => {
+            const tone = MAP_TONES[building.id]
+            return (
+            <MapSection key={key} sectionKey={key} label={`${plan.name} ${floor.label}`} tone={tone}>
               {DEFAULT_FLOOR_MAPS[key] ? (
                 <CustomMapImage
                   image={`${import.meta.env.BASE_URL}${DEFAULT_FLOOR_MAPS[key]}`}
                   annotations={mapAnnotations[key]}
                   label={`${plan.name} ${floor.label}`}
+                  accentColor={tone?.border}
                 />
               ) : (
                 <svg viewBox={`0 0 ${FLOOR_VIEW.w} ${FLOOR_VIEW.h}`} className="max-h-full w-full drop-shadow-sm" preserveAspectRatio="xMidYMid meet">
@@ -213,7 +223,8 @@ export default function MapView({ mapTarget, dataVersion }) {
                 </svg>
               )}
             </MapSection>
-          ))}
+            )
+          })}
         </div>
 
         <MapScrollRail currentIndex={currentIndex} total={mapOrder.length} />
@@ -287,11 +298,12 @@ export default function MapView({ mapTarget, dataVersion }) {
   )
 }
 
-function MapSection({ sectionKey, label, children }) {
+function MapSection({ sectionKey, label, children, tone }) {
   return (
     <section
       data-map-section={sectionKey}
       className="relative flex h-full min-h-full snap-start snap-always items-center justify-center [scroll-snap-stop:always]"
+      style={tone ? { backgroundColor: tone.background } : undefined}
       aria-label={label}
     >
       {children}
@@ -315,9 +327,12 @@ function MapScrollRail({ currentIndex, total }) {
   )
 }
 
-function CustomMapImage({ image, annotations = [], label }) {
+function CustomMapImage({ image, annotations = [], label, accentColor }) {
   return (
-    <div className="relative mx-auto aspect-video max-h-full w-full overflow-hidden rounded-2xl bg-white shadow-sm">
+    <div
+      className="relative mx-auto aspect-video max-h-full w-full overflow-hidden rounded-2xl border-2 bg-white shadow-sm"
+      style={{ borderColor: accentColor || 'rgba(255,255,255,0.9)' }}
+    >
       <img src={image} alt={`${label}のフロアマップ`} loading="lazy" decoding="async" className="h-full w-full object-contain" />
       {annotations.map((item) => (
         <div
