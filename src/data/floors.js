@@ -11,7 +11,6 @@ export const VISIBLE_FLOOR_KEYS = new Set([
   'honkan-3f',
   'minami-2f',
   'minami-3f',
-  'minami-4f',
 ])
 
 // PowerPointから書き出した図面をWeb向けWebPへ変換した既定画像。

@@ -174,22 +174,22 @@ export default function MapView({ mapTarget, dataVersion }) {
   return (
     <div className="relative flex h-full flex-col overflow-hidden bg-[#f4f1e3]">
       <section
-        className="relative h-[70vw] min-h-56 max-h-[48dvh] shrink-0 border-b-2 border-white bg-[#f4f1e3]"
+        className="relative h-[82vw] min-h-72 max-h-[58dvh] shrink-0 border-b-2 border-white bg-[#f4f1e3]"
         aria-label="フロアマップ"
       >
         <div
-          className="pointer-events-none absolute left-2 top-1.5 z-40 max-w-[38%] rounded-2xl border border-white/80 bg-white/95 px-3 py-2 shadow-md backdrop-blur-sm"
+          className="pointer-events-none absolute left-2 top-1.5 z-40 max-w-[58%] rounded-lg border border-white/80 bg-white/90 px-2 py-1 shadow-sm backdrop-blur-sm"
           style={currentTone ? { backgroundColor: currentTone.badge, borderColor: currentTone.border } : undefined}
           aria-live="polite"
         >
-          <p className="text-[8px] font-black tracking-[0.16em] text-fest">現在のマップ</p>
-          <h2 className="truncate text-lg font-black leading-tight text-ink">{currentMap.label}</h2>
+          <p className="text-[7px] font-black leading-none tracking-[0.12em] text-fest">現在のマップ</p>
+          <h2 className="mt-0.5 truncate text-xs font-black leading-tight text-ink">{currentMap.label}</h2>
         </div>
         <button
           type="button"
           onClick={() => scrollToSection(mapOrder[currentIndex - 1]?.key)}
           disabled={currentIndex === 0}
-          className="absolute left-[44%] top-2 z-40 rounded-full border border-orange-200 bg-white/95 px-2.5 py-2 text-[14px] font-black text-fest shadow-md backdrop-blur-sm transition-transform active:scale-95 disabled:pointer-events-none disabled:opacity-30"
+          className="absolute right-6 top-1.5 z-40 rounded-full border border-orange-200 bg-white/90 px-2 py-1 text-[10px] font-black text-fest shadow-sm backdrop-blur-sm transition-transform active:scale-95 disabled:pointer-events-none disabled:opacity-30"
           aria-label="一つ上のマップへ移動"
         >
           ▲ 上へ
@@ -261,7 +261,7 @@ export default function MapView({ mapTarget, dataVersion }) {
           type="button"
           onClick={() => scrollToSection(mapOrder[currentIndex + 1]?.key)}
           disabled={currentIndex === mapOrder.length - 1}
-          className="absolute bottom-2 left-1/2 z-40 -translate-x-1/2 rounded-full border border-orange-200 bg-white/95 px-3 py-1 text-[14px] font-black text-fest shadow-md backdrop-blur-sm transition-transform active:scale-95 disabled:pointer-events-none disabled:opacity-30"
+          className="absolute bottom-1.5 left-1/2 z-40 -translate-x-1/2 rounded-full border border-orange-200 bg-white/90 px-2.5 py-1 text-[10px] font-black text-fest shadow-sm backdrop-blur-sm transition-transform active:scale-95 disabled:pointer-events-none disabled:opacity-30"
           aria-label="一つ下のマップへ移動"
         >
           ▼ 下のマップ
@@ -270,10 +270,9 @@ export default function MapView({ mapTarget, dataVersion }) {
 
       <section className="flex min-h-0 flex-1 flex-col bg-white" aria-label="模擬店情報">
         <div className="shrink-0 border-b border-orange-100 px-4 py-2">
-          <p className="text-[9px] font-black tracking-[0.16em] text-fest">STALLS ON THIS FLOOR</p>
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-lg font-black leading-tight text-ink">このフロアの模擬店</p>
+              <p className="text-base font-black leading-tight text-ink">このフロアの模擬店</p>
               <p className="mt-0.5 truncate text-xs font-bold text-stone-500">{currentMap.label}</p>
             </div>
             {selectedStall && (
@@ -333,11 +332,13 @@ function MapSection({ sectionKey, label, children, tone }) {
   return (
     <section
       data-map-section={sectionKey}
-      className="relative flex h-full min-h-full snap-start snap-always items-center justify-center [container-type:size] [scroll-snap-stop:always]"
+      className="relative h-full min-h-full snap-start snap-always [scroll-snap-stop:always]"
       style={tone ? { backgroundColor: tone.background } : undefined}
       aria-label={label}
     >
-      {children}
+      <div className="flex h-full w-full items-center justify-center px-1.5 pb-8 pt-8 [container-type:size]">
+        {children}
+      </div>
     </section>
   )
 }
@@ -441,14 +442,11 @@ function StallVerticalList({ stalls, onSelect, initialScrollTop = 0, nextMapLabe
             <button
               type="button"
               onClick={onNextMap}
-              className="mt-4 flex w-full items-center justify-between rounded-2xl bg-gradient-to-r from-orange-500 to-amber-400 px-4 py-4 text-left text-white shadow-md transition-transform active:scale-[0.98]"
+              className="mx-auto mt-3 flex items-center gap-2 rounded-full border border-stone-200 bg-white px-4 py-2 text-stone-500 transition-colors active:bg-stone-100"
             >
-              <span>
-                <span className="block text-[10px] font-black tracking-[0.12em] text-white/80">NEXT FLOOR</span>
-                <span className="block text-sm font-black">次のフロアに進む</span>
-                {nextMapLabel && <span className="mt-0.5 block text-[11px] font-bold text-white/85">{nextMapLabel}</span>}
-              </span>
-              <span className="text-2xl font-black" aria-hidden="true">↓</span>
+              <span className="text-xs font-bold">次のフロアへ</span>
+              {nextMapLabel && <span className="max-w-32 truncate text-[10px] font-medium text-stone-400">{nextMapLabel}</span>}
+              <span className="text-xs" aria-hidden="true">↓</span>
             </button>
           )}
         </div>

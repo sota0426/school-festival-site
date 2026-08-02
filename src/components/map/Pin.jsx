@@ -29,7 +29,8 @@ export default function Pin({ x, y, color, emoji, selected, delay = 0, onTap }) 
               fill="none"
               stroke={color}
               strokeWidth="2.5"
-              className="live-dot"
+              strokeDasharray="5 4"
+              className="selected-pin-focus"
             />
           )}
         </g>

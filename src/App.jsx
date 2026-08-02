@@ -180,45 +180,49 @@ function PreVisitGuideModal({ onClose }) {
       aria-modal="true"
       aria-labelledby="pre-visit-guide-title"
     >
-      <div className="max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-3xl bg-[#fffaf2] p-5 shadow-2xl">
-        <div className="rounded-3xl bg-gradient-to-br from-fest to-fest2 px-5 py-5 text-white shadow-lg shadow-orange-200">
+      <div className="flex max-h-[94dvh] w-full max-w-md flex-col overflow-hidden rounded-3xl bg-[#fffaf2] shadow-2xl">
+        <div className="m-3 mb-0 shrink-0 rounded-2xl bg-gradient-to-br from-fest to-fest2 px-4 py-3 text-white shadow-lg shadow-orange-200">
           <p className="text-[10px] font-black tracking-[0.2em] text-white/75">BEFORE YOUR VISIT</p>
-          <h2 id="pre-visit-guide-title" className="mt-1 text-2xl font-black">ご来場案内</h2>
-          <p className="mt-1 text-xs font-bold text-white/80">ご来場前にご確認ください</p>
+          <h2 id="pre-visit-guide-title" className="mt-0.5 text-xl font-black">ご来場案内</h2>
+          <p className="text-[11px] font-bold text-white/80">ご来場前にご確認ください</p>
         </div>
 
-        <VisitorGuide />
+        <div className="min-h-0 flex-1 overflow-y-auto px-3 py-2.5">
+          <VisitorGuide compact />
 
-        <div className="mt-3 rounded-2xl border border-teal-100 bg-white p-4 shadow-sm">
+        <div className="mt-2 rounded-2xl border border-teal-100 bg-white p-2.5 shadow-sm">
           <div className="flex items-start gap-3">
             <span
-              className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-teal-50 text-2xl"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-teal-50 text-xl"
               aria-hidden="true"
             >
               🅿️
             </span>
             <div className="min-w-0 flex-1">
-              <h3 className="mt-0.5 text-sm font-black text-ink">臨時駐車場：{PARKING.name}</h3>
-              <p className="mt-1 text-xs font-bold leading-relaxed text-stone-500">{PARKING.address}</p>
+              <h3 className="text-sm font-black text-ink">臨時駐車場：{PARKING.name}</h3>
+              <p className="mt-0.5 text-[11px] font-bold leading-snug text-stone-500">{PARKING.address}</p>
               <a
                 href={PARKING.googleMapUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-3 inline-flex rounded-full bg-teal-600 px-4 py-2 text-xs font-black text-white shadow-sm transition-transform active:scale-95"
+                className="mt-2 inline-flex rounded-full bg-teal-600 px-3 py-1.5 text-[11px] font-black text-white shadow-sm transition-transform active:scale-95"
               >
                 マップで見る ↗
               </a>
             </div>
           </div>
         </div>
+        </div>
 
-        <button
-          type="button"
-          onClick={onClose}
-          className="mt-5 w-full rounded-full bg-gradient-to-r from-fest to-fest2 py-3.5 text-base font-black text-white shadow-lg shadow-orange-200 transition-transform active:scale-95"
-        >
-          確認しました
-        </button>
+        <div className="shrink-0 border-t border-orange-100 bg-[#fffaf2] p-3 pt-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full rounded-full bg-gradient-to-r from-fest to-fest2 py-3 text-sm font-black text-white shadow-lg shadow-orange-200 transition-transform active:scale-95"
+          >
+            確認しました
+          </button>
+        </div>
       </div>
     </div>
   )

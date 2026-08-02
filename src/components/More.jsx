@@ -79,13 +79,14 @@ export default function More({
   )
 }
 
-export function VisitorGuide() {
+export function VisitorGuide({ compact = false }) {
   return (
-    <div className="mt-4 space-y-3">
-      <GuideRow emoji="🕘" title="開催時間" text={`${FESTIVAL.openHours}（${FESTIVAL.dateLabel}）`} />
-      <GuideRow emoji="👟" title="上履き" text="上履きをご持参ください" />
+    <div className={compact ? 'space-y-2' : 'mt-4 space-y-3'}>
+      <GuideRow compact={compact} emoji="🕘" title="開催時間" text={`${FESTIVAL.openHours}（${FESTIVAL.dateLabel}）`} />
+      <GuideRow compact={compact} emoji="👟" title="上履き" text="上履きをご持参ください" />
       <GuideRow
-        icon={<img src={`${import.meta.env.BASE_URL}images/paypay-logo.jpg`} alt="PayPay" className="h-16 w-16 rounded-xl object-cover" />}
+        compact={compact}
+        icon={<img src={`${import.meta.env.BASE_URL}images/paypay-logo.jpg`} alt="PayPay" className="h-full w-full rounded-xl object-cover" />}
         title="キャッシュレス決済"
         text="PayPayの利用が可能です。ぜひご活用ください！"
         accent
@@ -94,15 +95,15 @@ export function VisitorGuide() {
   )
 }
 
-function GuideRow({ emoji, icon, title, text, accent = false }) {
+function GuideRow({ emoji, icon, title, text, accent = false, compact = false }) {
   return (
-    <div className={`flex items-center gap-3 rounded-2xl p-4 shadow-sm ${accent ? 'border border-[#ff0033]/20 bg-[#fff5f7]' : 'bg-white'}`}>
-      <div className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-xl bg-stone-50">
-        {icon || <span className="text-3xl" aria-hidden="true">{emoji}</span>}
+    <div className={`flex items-center rounded-2xl shadow-sm ${compact ? 'gap-2.5 p-2.5' : 'gap-3 p-4'} ${accent ? 'border border-[#ff0033]/20 bg-[#fff5f7]' : 'bg-white'}`}>
+      <div className={`grid shrink-0 place-items-center overflow-hidden rounded-xl bg-stone-50 ${compact ? 'h-11 w-11' : 'h-16 w-16'}`}>
+        {icon || <span className={compact ? 'text-2xl' : 'text-3xl'} aria-hidden="true">{emoji}</span>}
       </div>
       <div className="min-w-0">
         <h3 className="text-sm font-black text-ink">{title}</h3>
-        <p className="mt-1 text-xs font-bold leading-relaxed text-stone-500">{text}</p>
+        <p className={`${compact ? 'mt-0.5 text-[11px] leading-snug' : 'mt-1 text-xs leading-relaxed'} font-bold text-stone-500`}>{text}</p>
       </div>
     </div>
   )
