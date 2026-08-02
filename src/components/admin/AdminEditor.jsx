@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { CAMPUS } from '../../data/campus'
 import { CATEGORIES } from '../../data/categories'
-import { DEFAULT_FLOOR_MAPS, FLOOR_PLANS, FLOOR_VIEW, VISIBLE_FLOOR_KEYS } from '../../data/floors'
+import { DEFAULT_FLOOR_MAPS, FLOOR_MAP_ASPECT_RATIOS, FLOOR_PLANS, FLOOR_VIEW, VISIBLE_FLOOR_KEYS } from '../../data/floors'
 import { STALLS, replaceStalls } from '../../data/stalls'
 import {
   downloadCsvTemplate,
@@ -13,12 +13,15 @@ import {
 } from '../../lib/festivalData'
 import { readMapAnnotations, saveMapAnnotations } from '../../lib/mapEditorStorage'
 import { CloseIcon } from '../Icons'
+import { isStallsApiConfigured, saveStallsToSheet } from '../../lib/stallsApi'
+import ImageMapPin from '../map/ImageMapPin'
 
 const ADMIN_PASSWORD = '1234'
 const AUTH_KEY = 'festival-admin-auth'
 
 const PIN_MAPS = [
   { key: 'grounds', label: '敷地内全体', type: 'out' },
+  { key: 'campus', label: '校舎案内', type: 'guide' },
   ...Object.entries(FLOOR_PLANS).flatMap(([building, plan]) =>
     plan.floors
       .map((floor) => ({
@@ -32,6 +35,21 @@ const PIN_MAPS = [
   ),
 ]
 
+function stallsForMap(stalls, map) {
+  return stalls.filter((stall) => {
+    if (map.type === 'out') return stall.loc.type === 'out'
+    if (map.type === 'guide') return stall.loc.type === 'guide'
+    return stall.loc.type === 'room' && stall.loc.building === map.building && stall.loc.floor === map.floor
+  })
+}
+
+function mapKeyForStall(stall) {
+  if (!stall) return PIN_MAPS[0].key
+  if (stall.loc.type === 'out') return 'grounds'
+  if (stall.loc.type === 'guide') return 'campus'
+  return `${stall.loc.building}-${stall.loc.floor}`
+}
+
 export default function AdminEditor({ onClose }) {
   const [authenticated, setAuthenticated] = useState(() => sessionStorage.getItem(AUTH_KEY) === 'ok')
   const [password, setPassword] = useState('')
@@ -39,16 +57,21 @@ export default function AdminEditor({ onClose }) {
   const [stalls, setStalls] = useState(() => structuredClone(STALLS))
   const [mapKey, setMapKey] = useState('grounds')
   const [selectedId, setSelectedId] = useState(STALLS[0]?.id || '')
+  const [pinMode, setPinMode] = useState('place')
   const [message, setMessage] = useState('')
   const fileInput = useRef(null)
   const jsonInput = useRef(null)
 
   const selected = stalls.find((stall) => stall.id === selectedId)
   const map = PIN_MAPS.find((item) => item.key === mapKey) || PIN_MAPS[0]
-  const mapStalls = stalls.filter((stall) => {
-    if (map.type === 'out') return stall.loc.type === 'out'
-    return stall.loc.type === 'room' && stall.loc.building === map.building && stall.loc.floor === map.floor
-  })
+  const mapStalls = stallsForMap(stalls, map)
+
+  const changeMap = (nextMapKey) => {
+    const nextMap = PIN_MAPS.find((item) => item.key === nextMapKey) || PIN_MAPS[0]
+    const nextMapStalls = stallsForMap(stalls, nextMap)
+    setMapKey(nextMap.key)
+    setSelectedId(nextMapStalls[0]?.id || '')
+  }
 
   const authenticate = (event) => {
     event.preventDefault()
@@ -64,6 +87,35 @@ export default function AdminEditor({ onClose }) {
     setStalls((current) => current.map((stall) => stall.id === selectedId ? { ...stall, ...changes } : stall))
   }
 
+  const moveSelectedToMap = (nextMapKey) => {
+    if (!selected) return
+    const nextMap = PIN_MAPS.find((item) => item.key === nextMapKey) || PIN_MAPS[0]
+    setStalls((current) => current.map((stall) => {
+      if (stall.id !== selected.id) return stall
+      if (nextMap.type === 'out') {
+        return { ...stall, loc: { type: 'out', x: CAMPUS.w / 2, y: CAMPUS.h / 2 }, placeLabel: '敷地内全体' }
+      }
+      if (nextMap.type === 'guide') {
+        return { ...stall, loc: { type: 'guide', x: 50, y: 50 }, placeLabel: '校舎案内マップ' }
+      }
+      const floor = FLOOR_PLANS[nextMap.building]?.floors.find((item) => item.id === nextMap.floor)
+      return {
+        ...stall,
+        loc: {
+          type: 'room',
+          building: nextMap.building,
+          floor: nextMap.floor,
+          room: floor?.rooms[0]?.id,
+          pinX: FLOOR_VIEW.w / 2,
+          pinY: FLOOR_VIEW.h / 2,
+        },
+        placeLabel: nextMap.label,
+      }
+    }))
+    setMapKey(nextMap.key)
+    setMessage(`${selected.name}を「${nextMap.label}」へ移動しました。ピン位置を調整して保存してください`)
+  }
+
   const placePin = (event) => {
     if (!selected) return
     const rect = event.currentTarget.getBoundingClientRect()
@@ -73,6 +125,9 @@ export default function AdminEditor({ onClose }) {
       if (stall.id !== selected.id) return stall
       if (map.type === 'out') {
         return { ...stall, loc: { type: 'out', x: px * CAMPUS.w, y: py * CAMPUS.h } }
+      }
+      if (map.type === 'guide') {
+        return { ...stall, loc: { type: 'guide', x: px * 100, y: py * 100 }, placeLabel: '校舎案内マップ' }
       }
       const floor = FLOOR_PLANS[map.building]?.floors.find((item) => item.id === map.floor)
       const room = stall.loc.type === 'room' && stall.loc.building === map.building && stall.loc.floor === map.floor
@@ -93,9 +148,15 @@ export default function AdminEditor({ onClose }) {
     setMessage(`${selected.name}のピン位置を変更しました（保存前）`)
   }
 
-  const save = () => {
-    replaceStalls(stalls)
-    setMessage(`${stalls.length}件をこのブラウザに保存しました`)
+  const save = async () => {
+    setMessage(isStallsApiConfigured() ? 'スプレッドシートへ保存しています…' : 'このブラウザへ保存しています…')
+    try {
+      if (isStallsApiConfigured()) await saveStallsToSheet(stalls)
+      replaceStalls(stalls)
+      setMessage(`${stalls.length}件を${isStallsApiConfigured() ? 'スプレッドシートとブラウザ' : 'このブラウザ'}に保存しました`)
+    } catch (error) {
+      setMessage(`保存エラー: ${error.message}`)
+    }
   }
 
   const importCsv = (file) => {
@@ -106,6 +167,7 @@ export default function AdminEditor({ onClose }) {
         const imported = parseCsv(reader.result)
         setStalls(imported)
         setSelectedId(imported[0]?.id || '')
+        setMapKey(mapKeyForStall(imported[0]))
         setMessage(`CSVから${imported.length}件を読み込みました。内容を確認して保存してください`)
       } catch (error) {
         setMessage(`CSVエラー: ${error.message}`)
@@ -133,6 +195,7 @@ export default function AdminEditor({ onClose }) {
         if (!Array.isArray(data.stalls)) throw new Error('stalls配列がありません')
         setStalls(data.stalls)
         setSelectedId(data.stalls[0]?.id || '')
+        setMapKey(mapKeyForStall(data.stalls[0]))
         if (data.mapAnnotations) saveMapAnnotations(data.mapAnnotations)
         setMessage(`JSONから${data.stalls.length}件を復元しました。内容を確認して保存してください`)
       } catch (error) {
@@ -189,7 +252,7 @@ export default function AdminEditor({ onClose }) {
           <button type="button" onClick={save} className="shrink-0 rounded-full bg-fest px-4 py-2 text-[10px] font-black text-white">保存する</button>
         </div>
         <input ref={fileInput} type="file" accept=".csv,text/csv" className="hidden" onChange={(event) => importCsv(event.target.files?.[0])} />
-        <input ref={jsonInput} type="file" accept=".json,application/json" className="hidden" onChange={(event) => importJson(event.target.files?.[0])} />
+        <input ref={jsonInput} type="file" accept=".json,.txt,application/json,text/plain" className="hidden" onChange={(event) => importJson(event.target.files?.[0])} />
         {message && <p className="mt-2 text-[10px] font-bold text-stone-500">{message}</p>}
       </div>
 
@@ -197,24 +260,35 @@ export default function AdminEditor({ onClose }) {
         <main className="min-h-[55dvh] flex-1">
           <div className="mb-2 flex gap-2 overflow-x-auto [scrollbar-width:none]">
             {PIN_MAPS.map((item) => (
-              <button key={item.key} type="button" onClick={() => setMapKey(item.key)} className={`shrink-0 rounded-full px-3 py-2 text-[10px] font-black ${mapKey === item.key ? 'bg-ink text-white' : 'bg-white text-stone-500'}`}>{item.label}</button>
+              <button key={item.key} type="button" onClick={() => changeMap(item.key)} className={`shrink-0 rounded-full px-3 py-2 text-[10px] font-black ${mapKey === item.key ? 'bg-ink text-white' : 'bg-white text-stone-500'}`}>{item.label}</button>
             ))}
           </div>
-          <p className="mb-2 rounded-xl bg-orange-50 px-3 py-2 text-[10px] font-black text-orange-800">
-            店舗を選び、地図上の置きたい位置をタップしてください。
-          </p>
-          <PinCanvas map={map} stalls={mapStalls} selectedId={selectedId} onPlace={placePin} />
+          <div className="mb-2 flex items-center gap-2 rounded-xl bg-orange-50 p-2">
+            <button type="button" onClick={() => setPinMode('place')} className={`rounded-full px-3 py-2 text-[10px] font-black ${pinMode === 'place' ? 'bg-fest text-white' : 'bg-white text-orange-800'}`}>📍 ピンを配置</button>
+            <button type="button" onClick={() => setPinMode('select')} className={`rounded-full px-3 py-2 text-[10px] font-black ${pinMode === 'select' ? 'bg-ink text-white' : 'bg-white text-stone-600'}`}>☝️ ピンを選択</button>
+            <p className="min-w-0 flex-1 text-[10px] font-black text-orange-800">
+              {pinMode === 'place' ? '選択中の模擬店を地図上へ配置します。' : '地図上のピンをタップして模擬店を選択します。'}
+            </p>
+          </div>
+          <PinCanvas map={map} stalls={mapStalls} selectedId={selectedId} mode={pinMode} onPlace={placePin} onSelect={setSelectedId} />
         </main>
 
         <aside className="mt-3 shrink-0 rounded-2xl bg-white p-4 shadow-sm md:mt-0 md:w-80">
           <label className="text-[10px] font-black text-stone-400">
-            編集する模擬店（{stalls.length}件）
-            <select value={selectedId} onChange={(event) => setSelectedId(event.target.value)} className="mt-1 w-full rounded-xl border border-stone-200 px-3 py-2 text-sm font-black outline-none">
-              {stalls.map((stall) => <option key={stall.id} value={stall.id}>{stall.name}（{stall.org}）</option>)}
+            <span className="block">編集する模擬店（このマップに{mapStalls.length}件）</span>
+            <select value={selectedId} onChange={(event) => setSelectedId(event.target.value)} disabled={mapStalls.length === 0} className="mt-1 w-full rounded-xl border border-stone-200 px-3 py-2 text-sm font-black outline-none disabled:bg-stone-100 disabled:text-stone-400">
+              {mapStalls.length === 0 && <option value="">このマップに模擬店はありません</option>}
+              {mapStalls.map((stall) => <option key={stall.id} value={stall.id}>{stall.name}（{stall.org}）</option>)}
             </select>
           </label>
           {selected && (
             <div className="mt-3 space-y-3">
+              <label className="block text-[10px] font-black text-stone-400">
+                配置マップ
+                <select value={mapKeyForStall(selected)} onChange={(event) => moveSelectedToMap(event.target.value)} className="mt-1 w-full rounded-xl border border-stone-200 px-3 py-2 text-sm font-black outline-none focus:border-fest">
+                  {PIN_MAPS.map((item) => <option key={item.key} value={item.key}>{item.label}</option>)}
+                </select>
+              </label>
               <AdminField label="店名" value={selected.name} onChange={(name) => updateSelected({ name })} />
               <AdminField label="クラス・団体" value={selected.org} onChange={(org) => updateSelected({ org })} />
               <label className="block text-[10px] font-black text-stone-400">
@@ -239,29 +313,44 @@ export default function AdminEditor({ onClose }) {
   )
 }
 
-function PinCanvas({ map, stalls, selectedId, onPlace }) {
-  const aspectRatio = map.type === 'out' ? `${CAMPUS.w} / ${CAMPUS.h}` : '16 / 9'
+function PinCanvas({ map, stalls, selectedId, mode, onPlace, onSelect }) {
+  const aspectRatio = map.type === 'out'
+    ? `${CAMPUS.w} / ${CAMPUS.h}`
+    : map.type === 'guide'
+      ? '4 / 3'
+      : FLOOR_MAP_ASPECT_RATIOS[map.key] || '16 / 9'
   const floorImage = map.type === 'room' ? DEFAULT_FLOOR_MAPS[map.key] : null
   return (
-    <div onClick={onPlace} className="relative mx-auto w-full cursor-crosshair overflow-hidden rounded-2xl border-2 border-fest bg-white shadow-inner" style={{ aspectRatio }}>
+    <div onClick={mode === 'place' ? onPlace : undefined} className={`relative mx-auto w-full overflow-hidden rounded-2xl border-2 border-fest bg-white shadow-inner ${mode === 'place' ? 'cursor-crosshair' : 'cursor-default'}`} style={{ aspectRatio }}>
       {map.type === 'out' ? (
         <img src={`${import.meta.env.BASE_URL}images/campus-overall.png`} alt="敷地内全体" className="pointer-events-none h-full w-full object-cover" />
+      ) : map.type === 'guide' ? (
+        <img src={`${import.meta.env.BASE_URL}images/campus-building-guide.png?v=4`} alt="校舎案内" className="pointer-events-none h-full w-full object-contain" />
       ) : floorImage ? (
         <img
           src={`${import.meta.env.BASE_URL}${floorImage}`}
           alt={`${map.label}のフロア図`}
-          className="pointer-events-none h-full w-full object-contain"
+          className="pointer-events-none h-full w-full object-fill"
         />
       ) : (
         <div className="grid h-full place-items-center text-sm font-bold text-stone-400">フロア図がありません</div>
       )}
       {stalls.map((stall) => {
-        const x = map.type === 'out' ? stall.loc.x / CAMPUS.w * 100 : (stall.loc.pinX ?? FLOOR_VIEW.w / 2) / FLOOR_VIEW.w * 100
-        const y = map.type === 'out' ? stall.loc.y / CAMPUS.h * 100 : (stall.loc.pinY ?? FLOOR_VIEW.h / 2) / FLOOR_VIEW.h * 100
+        const x = map.type === 'out' ? stall.loc.x / CAMPUS.w * 100 : map.type === 'guide' ? stall.loc.x : (stall.loc.pinX ?? FLOOR_VIEW.w / 2) / FLOOR_VIEW.w * 100
+        const y = map.type === 'out' ? stall.loc.y / CAMPUS.h * 100 : map.type === 'guide' ? stall.loc.y : (stall.loc.pinY ?? FLOOR_VIEW.h / 2) / FLOOR_VIEW.h * 100
+        const category = CATEGORIES[stall.cat] || CATEGORIES.exhibit
         return (
-          <button key={stall.id} type="button" onClick={(event) => event.stopPropagation()} className={`absolute grid h-7 w-7 -translate-x-1/2 -translate-y-full place-items-center rounded-full border-2 text-sm shadow-md ${stall.id === selectedId ? 'z-10 border-white bg-fest ring-4 ring-orange-300' : 'border-white bg-ink'}`} style={{ left: `${x}%`, top: `${y}%` }} title={stall.name}>
-            📍
-          </button>
+          <ImageMapPin
+            key={stall.id}
+            x={x}
+            y={y}
+            color={category.color}
+            emoji={category.emoji}
+            selected={stall.id === selectedId}
+            label={`${stall.name}（クリックして選択）`}
+            size="small"
+            onClick={(event) => { event.stopPropagation(); onSelect(stall.id) }}
+          />
         )
       })}
     </div>

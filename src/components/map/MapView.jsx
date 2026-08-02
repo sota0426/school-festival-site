@@ -1,15 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { BUILDINGS, CAMPUS } from '../../data/campus'
-import { DEFAULT_FLOOR_MAPS, FLOOR_PLANS, FLOOR_VIEW, VISIBLE_FLOOR_KEYS } from '../../data/floors'
+import { DEFAULT_FLOOR_MAPS, FLOOR_MAP_ASPECT_RATIOS, FLOOR_PLANS, FLOOR_VIEW, VISIBLE_FLOOR_KEYS } from '../../data/floors'
 import { STALLS, stallById } from '../../data/stalls'
 import { CATEGORIES } from '../../data/categories'
 import { useApp } from '../../lib/AppContext'
 import { readMapAnnotations } from '../../lib/mapEditorStorage'
 import IllustratedCampusMap from './IllustratedCampusMap'
 import FloorMap from './FloorMap'
+import ImageMapPin from './ImageMapPin'
+import { stallPrice } from '../../lib/stallPrice'
 
 const GROUNDS_KEY = 'grounds'
 const CAMPUS_KEY = 'campus'
+const BUILDING_MAP_ORDER = ['honkan', 'minami', 'chugaku']
 
 const MAP_TONES = {
   honkan: { background: '#eaf6e5', border: '#9dcf8d', badge: '#f1faed' },
@@ -29,19 +32,25 @@ export default function MapView({ mapTarget, dataVersion }) {
   void dataVersion
 
   const floorSections = useMemo(
-    () => BUILDINGS.flatMap((building) => {
-      const plan = FLOOR_PLANS[building.id]
-      if (!plan) return []
-      return plan.floors
-        .map((floor) => ({
-          key: `${building.id}-${floor.id}`,
-          building,
-          plan,
-          floor,
-          label: `${plan.name} · ${floor.label}`,
-        }))
-        .filter((section) => VISIBLE_FLOOR_KEYS.has(section.key))
-    }),
+    () => [...BUILDINGS]
+      .sort((a, b) => {
+        const aIndex = BUILDING_MAP_ORDER.indexOf(a.id)
+        const bIndex = BUILDING_MAP_ORDER.indexOf(b.id)
+        return (aIndex === -1 ? BUILDING_MAP_ORDER.length : aIndex) - (bIndex === -1 ? BUILDING_MAP_ORDER.length : bIndex)
+      })
+      .flatMap((building) => {
+        const plan = FLOOR_PLANS[building.id]
+        if (!plan) return []
+        return plan.floors
+          .map((floor) => ({
+            key: `${building.id}-${floor.id}`,
+            building,
+            plan,
+            floor,
+            label: `${plan.name} · ${floor.label}`,
+          }))
+          .filter((section) => VISIBLE_FLOOR_KEYS.has(section.key))
+      }),
     [],
   )
 
@@ -73,7 +82,7 @@ export default function MapView({ mapTarget, dataVersion }) {
   const showStallOnMap = (stall) => {
     setFocusedStallId(stall.id)
     setSelectedStall(stall)
-    const key = stall.loc.type === 'out' ? GROUNDS_KEY : `${stall.loc.building}-${stall.loc.floor}`
+    const key = mapKeyForStall(stall)
     setActiveKey(key)
     requestAnimationFrame(() => scrollToSection(key))
   }
@@ -136,6 +145,16 @@ export default function MapView({ mapTarget, dataVersion }) {
   const selectedStallIndex = selectedStall
     ? navigableStalls.findIndex((stall) => stall.id === selectedStall.id)
     : -1
+  const nextMap = mapOrder[currentIndex + 1]
+
+  const moveToNextMap = () => {
+    if (!nextMap) return
+    setSelectedStall(null)
+    setFocusedStallId(null)
+    setActiveKey(nextMap.key)
+    setStallListScrollByMap((current) => ({ ...current, [nextMap.key]: 0 }))
+    requestAnimationFrame(() => scrollToSection(nextMap.key))
+  }
 
   const moveSelectedStall = (offset) => {
     const requestedIndex = selectedStallIndex + offset
@@ -194,9 +213,14 @@ export default function MapView({ mapTarget, dataVersion }) {
 
           <MapSection sectionKey={CAMPUS_KEY} label="校舎案内図">
             <CustomMapImage
-              image={`${import.meta.env.BASE_URL}images/campus-building-guide.webp?v=3`}
+              image={`${import.meta.env.BASE_URL}images/campus-building-guide.png?v=4`}
               annotations={mapAnnotations[CAMPUS_KEY]}
               label="校舎案内"
+              aspectRatio={4 / 3}
+              stalls={STALLS.filter((stall) => stall.loc.type === 'guide')}
+              selectedStallId={activeKey === CAMPUS_KEY ? focusedStallId : null}
+              animationKey={activeKey === CAMPUS_KEY ? CAMPUS_KEY : 'inactive'}
+              onPinTap={showStallOnMap}
             />
           </MapSection>
 
@@ -210,6 +234,11 @@ export default function MapView({ mapTarget, dataVersion }) {
                   annotations={mapAnnotations[key]}
                   label={`${plan.name} ${floor.label}`}
                   accentColor={tone?.border}
+                  aspectRatio={FLOOR_MAP_ASPECT_RATIOS[key]}
+                  stalls={STALLS.filter((stall) => mapKeyForStall(stall) === key)}
+                  selectedStallId={activeKey === key ? focusedStallId : null}
+                  animationKey={activeKey === key ? key : 'inactive'}
+                  onPinTap={showStallOnMap}
                 />
               ) : (
                 <svg viewBox={`0 0 ${FLOOR_VIEW.w} ${FLOOR_VIEW.h}`} className="max-h-full w-full drop-shadow-sm" preserveAspectRatio="xMidYMid meet">
@@ -290,6 +319,8 @@ export default function MapView({ mapTarget, dataVersion }) {
               stalls={currentStalls}
               onSelect={selectStallFromList}
               initialScrollTop={stallListScrollByMap[activeKey] || 0}
+              nextMapLabel={nextMap?.label}
+              onNextMap={nextMap ? moveToNextMap : undefined}
             />
           )}
         </div>
@@ -302,7 +333,7 @@ function MapSection({ sectionKey, label, children, tone }) {
   return (
     <section
       data-map-section={sectionKey}
-      className="relative flex h-full min-h-full snap-start snap-always items-center justify-center [scroll-snap-stop:always]"
+      className="relative flex h-full min-h-full snap-start snap-always items-center justify-center [container-type:size] [scroll-snap-stop:always]"
       style={tone ? { backgroundColor: tone.background } : undefined}
       aria-label={label}
     >
@@ -327,13 +358,36 @@ function MapScrollRail({ currentIndex, total }) {
   )
 }
 
-function CustomMapImage({ image, annotations = [], label, accentColor }) {
+function CustomMapImage({ image, annotations = [], label, accentColor, aspectRatio = 16 / 9, stalls = [], selectedStallId, animationKey, onPinTap }) {
   return (
     <div
-      className="relative mx-auto aspect-video max-h-full w-full overflow-hidden rounded-2xl border-2 bg-white shadow-sm"
-      style={{ borderColor: accentColor || 'rgba(255,255,255,0.9)' }}
+      className="relative mx-auto overflow-hidden rounded-2xl border-2 bg-white shadow-sm"
+      style={{
+        borderColor: accentColor || 'rgba(255,255,255,0.9)',
+        aspectRatio,
+        width: `min(100cqw, ${aspectRatio * 100}cqh)`,
+      }}
     >
-      <img src={image} alt={`${label}のフロアマップ`} loading="lazy" decoding="async" className="h-full w-full object-contain" />
+      <img src={image} alt={`${label}のフロアマップ`} loading="lazy" decoding="async" className="block h-full w-full object-fill" />
+      {stalls.map((stall, index) => {
+        const x = stall.loc.type === 'room' ? ((stall.loc.pinX ?? FLOOR_VIEW.w / 2) / FLOOR_VIEW.w) * 100 : stall.loc.x ?? 50
+        const y = stall.loc.type === 'room' ? ((stall.loc.pinY ?? FLOOR_VIEW.h / 2) / FLOOR_VIEW.h) * 100 : stall.loc.y ?? 50
+        const category = CATEGORIES[stall.cat] || CATEGORIES.exhibit
+        return (
+          <ImageMapPin
+            key={`${stall.id}-${animationKey || 'default'}`}
+            x={x}
+            y={y}
+            color={category.color}
+            emoji={category.emoji}
+            selected={selectedStallId === stall.id}
+            animate={animationKey !== 'inactive'}
+            delay={0.18 + index * 0.28}
+            label={`${stall.name}（${stall.org}）`}
+            onClick={(event) => { event.stopPropagation(); onPinTap?.(stall) }}
+          />
+        )
+      })}
       {annotations.map((item) => (
         <div
           key={item.id}
@@ -347,7 +401,7 @@ function CustomMapImage({ image, annotations = [], label, accentColor }) {
   )
 }
 
-function StallVerticalList({ stalls, onSelect, initialScrollTop = 0 }) {
+function StallVerticalList({ stalls, onSelect, initialScrollTop = 0, nextMapLabel, onNextMap }) {
   const listRef = useRef(null)
 
   useEffect(() => {
@@ -374,17 +428,25 @@ function StallVerticalList({ stalls, onSelect, initialScrollTop = 0 }) {
                   <span className="block truncate text-sm font-black text-ink">{stall.name}</span>
                   <span className="block truncate text-[11px] font-bold text-stone-500">{stall.org}</span>
                 </span>
+                {stall.menu?.length > 0 && stallPrice(stall) && (
+                  <span className="shrink-0 rounded-full bg-orange-50 px-2.5 py-1 text-xs font-black text-fest">
+                    {stallPrice(stall)}
+                  </span>
+                )}
                 <span className="text-sm font-black text-fest">›</span>
               </button>
             )
           })}
+
         </div>
     </div>
   )
 }
 
 function mapKeyForStall(stall) {
-  return stall.loc.type === 'out' ? GROUNDS_KEY : `${stall.loc.building}-${stall.loc.floor}`
+  if (stall.loc.type === 'out') return GROUNDS_KEY
+  if (stall.loc.type === 'guide') return CAMPUS_KEY
+  return `${stall.loc.building}-${stall.loc.floor}`
 }
 
 function SelectedStallPanel({ stall, onDetail }) {
@@ -409,9 +471,10 @@ function SelectedStallPanel({ stall, onDetail }) {
         <p className="text-[10px] font-black tracking-[0.16em] text-fest">MENU</p>
         {stall.menu.length > 0 ? (
           <ul className="mt-1 divide-y divide-orange-100 rounded-2xl bg-orange-50/60 px-3">
-            {stall.menu.slice(0, 1).map(([item], index) => (
-              <li key={index} className="py-2">
+            {stall.menu.slice(0, 1).map(([item, price], index) => (
+              <li key={index} className="flex items-center justify-between gap-3 py-2">
                 <span className="text-sm font-bold text-ink">{item}</span>
+                {stallPrice(stall, price) && <span className="shrink-0 text-sm font-black text-fest">{stallPrice(stall, price)}</span>}
               </li>
             ))}
           </ul>

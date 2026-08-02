@@ -15,7 +15,7 @@ const MAPS = [
 
 function editorMapImage(mapKey) {
   if (mapKey === 'grounds') return `${import.meta.env.BASE_URL}images/campus-overall.png`
-  if (mapKey === 'campus') return `${import.meta.env.BASE_URL}images/campus-building-guide.webp?v=3`
+  if (mapKey === 'campus') return `${import.meta.env.BASE_URL}images/campus-building-guide.png?v=4`
   return DEFAULT_FLOOR_MAPS[mapKey] ? `${import.meta.env.BASE_URL}${DEFAULT_FLOOR_MAPS[mapKey]}` : null
 }
 
@@ -142,7 +142,7 @@ export default function MapEditor({ onClose }) {
             onPointerMove={moveDrag}
             onPointerUp={() => { drag.current = null }}
             onPointerCancel={() => { drag.current = null }}
-            className={`relative mx-auto ${mapKey === 'grounds' ? 'aspect-[4/3]' : 'aspect-video'} max-h-[65dvh] w-full overflow-hidden rounded-2xl border-2 bg-white shadow-inner ${addMode ? 'cursor-crosshair border-fest' : 'border-stone-200'}`}
+            className={`relative mx-auto ${mapKey === 'grounds' || mapKey === 'campus' ? 'aspect-[4/3]' : 'aspect-video'} max-h-[65dvh] w-full overflow-hidden rounded-2xl border-2 bg-white shadow-inner ${addMode ? 'cursor-crosshair border-fest' : 'border-stone-200'}`}
           >
             {imageUrl ? (
               <img src={imageUrl} alt={`${mapLabel}の編集用背景`} className="pointer-events-none h-full w-full object-contain" />

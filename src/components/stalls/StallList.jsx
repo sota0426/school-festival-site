@@ -43,6 +43,7 @@ export default function StallList({ dataVersion }) {
 
   const definitions = [
     { id: 'outdoor', label: '屋外・グラウンド', emoji: '🌳', matches: (stall) => stall.loc.type === 'out' },
+    { id: 'guide', label: '校舎案内', emoji: '🗺️', matches: (stall) => stall.loc.type === 'guide' },
     { id: 'honkan', label: '中央校舎', emoji: '🏫', matches: (stall) => stall.loc.building === 'honkan' },
     { id: 'chugaku', label: '北校舎', emoji: '🏫', matches: (stall) => stall.loc.building === 'chugaku' },
     { id: 'minami', label: '南校舎', emoji: '🏫', matches: (stall) => stall.loc.building === 'minami' },

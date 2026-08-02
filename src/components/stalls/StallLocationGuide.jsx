@@ -9,6 +9,7 @@ const noop = () => {}
 export default function StallLocationGuide({ stall }) {
   const route = routeForStall(stall)
   const indoor = route.type === 'indoor'
+  const campusGuide = route.type === 'guide'
   const floorKey = indoor ? `${stall.loc.building}-${stall.loc.floor}` : null
   const floorImage = floorKey ? DEFAULT_FLOOR_MAPS[floorKey] : null
 
@@ -22,7 +23,7 @@ export default function StallLocationGuide({ stall }) {
 
       <div className="mt-3 overflow-hidden rounded-2xl border border-orange-100 bg-[#faf7ef] shadow-sm">
         <img
-          src={`${import.meta.env.BASE_URL}images/campus-building-guide.webp?v=3`}
+          src={`${import.meta.env.BASE_URL}images/campus-building-guide.png?v=4`}
           alt="生徒玄関から各校舎への案内図"
           className="h-auto w-full"
         />
@@ -67,7 +68,7 @@ export default function StallLocationGuide({ stall }) {
             )}
           </div>
         </>
-      ) : (
+      ) : campusGuide ? null : (
         <>
           <div className="mt-5">
             <p className="text-[10px] font-black tracking-[0.16em] text-fest">CAMPUS MAP</p>

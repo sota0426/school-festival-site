@@ -1,5 +1,6 @@
 import { CATEGORIES } from '../../data/categories'
 import { CloseIcon } from '../Icons'
+import { stallPrice } from '../../lib/stallPrice'
 
 export default function BottomSheet({ stall, onClose, onDetail }) {
   if (!stall) return null
@@ -37,9 +38,10 @@ export default function BottomSheet({ stall, onClose, onDetail }) {
           <h4 className="text-sm font-black text-ink">メニュー・料金</h4>
           {stall.menu.length > 0 ? (
             <ul className="mt-2 divide-y divide-orange-100 rounded-2xl bg-orange-50/60 px-4">
-              {stall.menu.slice(0, 1).map(([item], index) => (
-                <li key={index} className="py-3">
+              {stall.menu.slice(0, 1).map(([item, price], index) => (
+                <li key={index} className="flex items-center justify-between gap-3 py-3">
                   <span className="text-sm font-bold text-ink">{item}</span>
+                  {stallPrice(stall, price) && <span className="shrink-0 text-sm font-black text-fest">{stallPrice(stall, price)}</span>}
                 </li>
               ))}
             </ul>

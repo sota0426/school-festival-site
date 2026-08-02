@@ -4,6 +4,7 @@ import { useApp } from '../../lib/AppContext'
 import { CloseIcon } from '../Icons'
 import StallPoster from './StallPoster'
 import StallLocationGuide from './StallLocationGuide'
+import { stallPrice } from '../../lib/stallPrice'
 
 export default function StallDetail({ stallId }) {
   const { closeDetail } = useApp()
@@ -76,9 +77,14 @@ export default function StallDetail({ stallId }) {
             <div className="mt-5">
               <h3 className="text-xs font-black tracking-widest text-stone-400">MENU</h3>
               <ul className="mt-2 divide-y divide-orange-50 rounded-2xl bg-orange-50/50 px-4">
-                {stall.menu.slice(0, 1).map(([item], i) => (
-                  <li key={i} className="py-2.5">
+                {stall.menu.slice(0, 1).map(([item, price], i) => (
+                  <li key={i} className="flex items-center justify-between gap-3 py-2.5">
                     <span className="text-sm font-bold text-ink">{item}</span>
+                    {stallPrice(stall, price) && (
+                      <span className="shrink-0 rounded-full bg-white px-3 py-1 text-sm font-black text-fest shadow-sm">
+                        {stallPrice(stall, price)}
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>

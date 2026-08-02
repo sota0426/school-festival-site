@@ -7,6 +7,10 @@ export const FESTIVAL = {
   openHours: '9:00〜15:00',
   // Google Apps Script WebアプリのURL。未設定なら送信をスキップ(ローカル保存のみ)
   gasUrl: import.meta.env.VITE_SURVEY_GAS_URL || '',
+  // 模擬店データ用Google Apps Script Webアプリ。
+  stallsGasUrl: import.meta.env.VITE_STALLS_GAS_URL || '',
+  // DEV管理画面からの書き込み用。簡易保護のため公開サイトでは完全な秘匿にはならない。
+  stallsWriteToken: import.meta.env.VITE_STALLS_WRITE_TOKEN || '',
   // 公式Instagramが決まったら、このURLをアカウントURLへ変更してください。
   instagramUrl: 'https://www.instagram.com/tsuruoka_higashi/',
 }

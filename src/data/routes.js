@@ -13,6 +13,16 @@ const BRANCH_GUIDE = {
 }
 
 export function routeForStall(stall) {
+  if (stall.loc.type === 'guide') {
+    return {
+      type: 'guide',
+      start: '中央校舎・生徒玄関',
+      destination: stall.placeLabel,
+      summary: `生徒玄関 → ${stall.placeLabel}`,
+      instruction: '校舎案内マップで場所をご確認ください',
+    }
+  }
+
   if (stall.loc.type === 'out') {
     return {
       type: 'outdoor',

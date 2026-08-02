@@ -1,5 +1,5 @@
 // 2026年度 模擬店・展示データ
-// loc: { type:'out', x, y }(敷地全体マップ座標) or { type:'room', building, floor, room }
+// loc: { type:'out', x, y }(敷地全体マップ座標) or { type:'guide' }(校舎案内マップ) or { type:'room', building, floor, room }
 // poster: '/images/stalls/s01.webp' または
 // poster: { thumbnail:'/images/stalls/s01-thumb.webp', src:'/images/stalls/s01.webp' }
 // とすると、一覧は軽量版、詳細は高画質版を表示する。
@@ -26,11 +26,15 @@ export const DEFAULT_STALLS = [
   { id: 's11', name: 'つるっと冷うどん', org: '普3B', cat: 'food', foodGenre: 'meal', loc: { type: 'out', x: 520, y: 438 }, placeLabel: '屋外 外17', menu: [['冷うどん']], hours: '', pr: '暑い日にうれしい、つるっと食べられる冷たいうどんです。' },
   { id: 's07', name: 'サーターアンダギー', org: '体3C', cat: 'food', foodGenre: 'fried', loc: { type: 'out', x: 520, y: 500 }, placeLabel: '屋外 外18', menu: [['サーターアンダギー']], hours: '', pr: '外はさっくり、中はふんわり。沖縄のおやつを味わってください！' },
   { id: 's35', name: '教員企画', org: '教員', cat: 'exhibit', loc: { type: 'out', x: 520, y: 562 }, placeLabel: '屋外 外19', menu: [], hours: '', pr: '先生方による企画です。内容は決まり次第お知らせします。' },
-  { id: 's38', name: '美術部作品販売', org: '美術部', cat: 'exhibit', loc: { type: 'out', x: 232, y: 365 }, placeLabel: '中央校舎 玄関前', menu: [], hours: '', pr: '美術部員が制作した作品を販売します。お気に入りの一点を探してみてください。' },
+
+  { id: 's41', name: 'フリーマーケット', org: '図書部', cat: 'exhibit', loc: { type: 'out', x: 475, y: 225 }, placeLabel: '図書館前', menu: [], hours: '', pr: '掘り出し物を探してみませんか？売り上げは震災支援のために寄付します。' },
+
+  // --- 校舎案内 ---
+  { id: 's40', name: '休けい所', org: '図書委員会', cat: 'exhibit', loc: { type: 'guide', x: 18, y: 27 }, placeLabel: '校舎案内マップ', menu: [['無料の水']], hours: '', pr: '無料の水があります。涼しい部屋でゆっくり休憩しましょう。' },
 
   // --- 中央校舎1F ---
   { id: 's15', name: 'りんご飴', org: '特2A', cat: 'food', foodGenre: 'sweets', loc: { type: 'room', building: 'honkan', floor: '1f', room: 'h1-1' }, placeLabel: '中央校舎1F 職員室前', menu: [['りんご飴']], hours: '', pr: 'つやつやの飴で包んだ、見た目にもかわいいりんご飴です。' },
-  { id: 's37', name: '美術部作品展示', org: '美術部', cat: 'exhibit', loc: { type: 'room', building: 'honkan', floor: '1f', room: 'h1-10' }, placeLabel: '中央校舎1F ロビー', menu: [], hours: '', pr: '美術部員が心を込めて制作した作品を展示します。個性豊かな表現をお楽しみください。' },
+  { id: 's37', name: '美術部作品展示', org: '美術部', cat: 'exhibit', loc: { type: 'guide', x: 35, y: 27 }, placeLabel: '校舎案内マップ', menu: [], hours: '', pr: '美術部員が心を込めて制作した作品を展示します。個性豊かな表現をお楽しみください。' },
 
   // --- 中央校舎2F ---
   { id: 's34', name: '生徒会オリジナルジュース', org: '生徒会', cat: 'food', foodGenre: 'drink', loc: { type: 'room', building: 'honkan', floor: '2f', room: 'h2-10' }, placeLabel: '中央校舎2F 選択室1', menu: [['オリジナルジュース']], hours: '', pr: '生徒会が考えた文化祭限定のオリジナルジュースをお楽しみください！' },
@@ -64,9 +68,16 @@ function readSavedStalls() {
   if (typeof window === 'undefined') return null
   try {
     const saved = JSON.parse(localStorage.getItem(STALLS_STORAGE_KEY) || 'null')
-    return Array.isArray(saved) && saved.length > 0
-      ? saved.map((stall) => stall.foodGenre === 'grill' ? { ...stall, foodGenre: 'meal' } : stall)
-      : null
+    if (!Array.isArray(saved) || saved.length === 0) return null
+    const migrated = saved.map((stall) => {
+      const normalized = stall.foodGenre === 'grill' ? { ...stall, foodGenre: 'meal' } : stall
+      if (stall.id === 's37') return { ...normalized, loc: { type: 'guide', x: normalized.loc.x ?? 35, y: normalized.loc.y ?? 27 }, placeLabel: '校舎案内マップ' }
+      if (stall.id === 's40' && normalized.loc.type === 'guide') return { ...normalized, loc: { ...normalized.loc, x: normalized.loc.x ?? 18, y: normalized.loc.y ?? 27 } }
+      return normalized
+    })
+    const savedIds = new Set(migrated.map((stall) => stall.id))
+    const additions = DEFAULT_STALLS.filter((stall) => ['s40', 's41'].includes(stall.id) && !savedIds.has(stall.id))
+    return [...migrated, ...structuredClone(additions)]
   } catch {
     return null
   }

@@ -34,6 +34,8 @@ jobs:
         run: npm run build
         env:
           GITHUB_PAGES: 'true'
+          VITE_STALLS_GAS_URL: ${{ vars.STALLS_GAS_URL }}
+          VITE_STALLS_WRITE_TOKEN: ${{ secrets.STALLS_WRITE_TOKEN }}
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

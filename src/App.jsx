@@ -13,6 +13,8 @@ import Events from './components/Events'
 import More, { VisitorGuide } from './components/More'
 import PosterPreloader from './components/stalls/PosterPreloader'
 import AdminEditor from './components/admin/AdminEditor'
+import { loadStallsFromSheet } from './lib/stallsApi'
+import { replaceStalls } from './data/stalls'
 
 export default function App() {
   const isExitSurveyUrl = new URLSearchParams(window.location.search).has('exit-survey')
@@ -54,6 +56,16 @@ export default function App() {
     const refreshData = () => setDataVersion((version) => version + 1)
     window.addEventListener('festival-data-save', refreshData)
     return () => window.removeEventListener('festival-data-save', refreshData)
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    loadStallsFromSheet()
+      .then((stalls) => {
+        if (!cancelled && stalls?.length) replaceStalls(stalls)
+      })
+      .catch((error) => console.warn('スプレッドシートの模擬店データを取得できませんでした。', error))
+    return () => { cancelled = true }
   }, [])
 
   useEffect(() => {
