@@ -31,10 +31,17 @@ jobs:
         run: npm ci
 
       - name: Build
-        run: npm run build
+        run: |
+          if [ -z "$VITE_STALLS_GAS_URL" ]; then
+            echo "::error::STALLS_GAS_URL is not configured in GitHub Actions Variables or Secrets."
+            exit 1
+          fi
+          echo "Stalls spreadsheet URL is configured."
+          npm run build
         env:
           GITHUB_PAGES: 'true'
-          VITE_STALLS_GAS_URL: ${{ vars.STALLS_GAS_URL }}
+          VITE_SURVEY_GAS_URL: ${{ vars.SURVEY_GAS_URL || secrets.SURVEY_GAS_URL }}
+          VITE_STALLS_GAS_URL: ${{ vars.STALLS_GAS_URL || secrets.STALLS_GAS_URL }}
           VITE_STALLS_WRITE_TOKEN: ${{ secrets.STALLS_WRITE_TOKEN }}
 
       - name: Upload Pages artifact
