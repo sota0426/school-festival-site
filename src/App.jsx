@@ -13,7 +13,7 @@ import Events from './components/Events'
 import More, { VisitorGuide } from './components/More'
 import PosterPreloader from './components/stalls/PosterPreloader'
 import AdminEditor from './components/admin/AdminEditor'
-import { loadStallsFromSheet } from './lib/stallsApi'
+import { isStallsApiConfigured, loadStallsFromSheet } from './lib/stallsApi'
 import { replaceStalls } from './data/stalls'
 
 export default function App() {
@@ -60,11 +60,27 @@ export default function App() {
 
   useEffect(() => {
     let cancelled = false
+    if (!isStallsApiConfigured()) {
+      console.warn('[模擬店データ] GoogleスプレッドシートのURLが未設定です。VITE_STALLS_GAS_URLを確認してください。')
+      return () => { cancelled = true }
+    }
+
+    const startedAt = Date.now()
+    console.info('[模擬店データ] Googleスプレッドシートから取得を開始しました。')
     loadStallsFromSheet()
       .then((stalls) => {
-        if (!cancelled && stalls?.length) replaceStalls(stalls)
+        if (cancelled) return
+        if (!stalls?.length) {
+          console.warn(`[模擬店データ] 取得は完了しましたが、模擬店が0件でした。（${Date.now() - startedAt}ms）`)
+          return
+        }
+        replaceStalls(stalls)
+        console.info(`[模擬店データ] 取得成功：${stalls.length}件をサイトへ反映しました。（${Date.now() - startedAt}ms）`)
       })
-      .catch((error) => console.warn('スプレッドシートの模擬店データを取得できませんでした。', error))
+      .catch((error) => {
+        if (cancelled) return
+        console.error(`[模擬店データ] 取得失敗（${Date.now() - startedAt}ms）`, error)
+      })
     return () => { cancelled = true }
   }, [])
 

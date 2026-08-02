@@ -408,12 +408,12 @@ function StallVerticalList({ stalls, onSelect, initialScrollTop = 0, nextMapLabe
     listRef.current?.scrollTo({ top: initialScrollTop, behavior: 'auto' })
   }, [initialScrollTop])
 
-  if (stalls.length === 0) {
-    return <div className="grid h-full place-items-center px-6 text-center text-xs font-bold text-stone-400">このマップに表示する模擬店はありません</div>
-  }
   return (
     <div ref={listRef} data-tab-scroll="map" className="h-full overflow-y-auto px-3 py-2">
         <div className="space-y-2">
+          {stalls.length === 0 && (
+            <div className="grid min-h-28 place-items-center px-6 text-center text-xs font-bold text-stone-400">このマップに表示する模擬店はありません</div>
+          )}
           {stalls.map((stall) => {
             const cat = CATEGORIES[stall.cat]
             return (
@@ -437,7 +437,20 @@ function StallVerticalList({ stalls, onSelect, initialScrollTop = 0, nextMapLabe
               </button>
             )
           })}
-
+          {onNextMap && (
+            <button
+              type="button"
+              onClick={onNextMap}
+              className="mt-4 flex w-full items-center justify-between rounded-2xl bg-gradient-to-r from-orange-500 to-amber-400 px-4 py-4 text-left text-white shadow-md transition-transform active:scale-[0.98]"
+            >
+              <span>
+                <span className="block text-[10px] font-black tracking-[0.12em] text-white/80">NEXT FLOOR</span>
+                <span className="block text-sm font-black">次のフロアに進む</span>
+                {nextMapLabel && <span className="mt-0.5 block text-[11px] font-bold text-white/85">{nextMapLabel}</span>}
+              </span>
+              <span className="text-2xl font-black" aria-hidden="true">↓</span>
+            </button>
+          )}
         </div>
     </div>
   )
