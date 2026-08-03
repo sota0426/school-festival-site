@@ -383,6 +383,7 @@ function CustomMapImage({ image, annotations = [], label, accentColor, aspectRat
             emoji={category.emoji}
             selected={selectedStallId === stall.id}
             animate={animationKey !== 'inactive'}
+            hidden={animationKey === 'inactive'}
             delay={0.18 + index * 0.28}
             label={`${stall.name}（${stall.org}）`}
             onClick={(event) => { event.stopPropagation(); onPinTap?.(stall) }}

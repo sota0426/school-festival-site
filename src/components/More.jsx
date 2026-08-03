@@ -82,7 +82,7 @@ export default function More({
 export function VisitorGuide({ compact = false }) {
   return (
     <div className={compact ? 'space-y-2' : 'mt-4 space-y-3'}>
-      <GuideRow compact={compact} emoji="🕘" title="開催時間" text={`${FESTIVAL.openHours}（${FESTIVAL.dateLabel}）`} />
+      <GuideRow compact={compact} emoji="🕘" title={`開催日：${FESTIVAL.dateDisplayLabel}`}  text={`時間：${FESTIVAL.openHours}`} />
       <GuideRow compact={compact} emoji="👟" title="上履き" text="上履きをご持参ください" />
       <GuideRow
         compact={compact}

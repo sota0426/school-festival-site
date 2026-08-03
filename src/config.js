@@ -4,6 +4,7 @@ export const FESTIVAL = {
   year: 2026,
   dateISO: '2026-08-30',
   dateLabel: '2026.8.30 SUN',
+  dateDisplayLabel: '2026年8月30日（日）',
   openHours: '9:00〜15:00',
   // Google Apps Script WebアプリのURL。未設定なら送信をスキップ(ローカル保存のみ)
   gasUrl: import.meta.env.VITE_SURVEY_GAS_URL || '',

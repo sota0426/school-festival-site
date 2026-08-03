@@ -1,6 +1,6 @@
 // マップ上の模擬店ピン。スマホでも見つけやすい大きさを基準にし、
 // 選択中のピンはさらに大きくして位置を強調する。
-export default function Pin({ x, y, color, emoji, selected, delay = 0, onTap }) {
+export default function Pin({ x, y, color, emoji, selected, delay = 0, animate = true, onTap }) {
   return (
     <g
       transform={`translate(${x} ${y})`}
@@ -8,7 +8,10 @@ export default function Pin({ x, y, color, emoji, selected, delay = 0, onTap }) 
       className="cursor-pointer"
       role="button"
     >
-      <g className="pin-drop" style={{ animationDelay: `${delay}s` }}>
+      <g
+        className={animate ? 'pin-drop' : undefined}
+        style={animate ? { animationDelay: `${delay}s` } : { opacity: 0 }}
+      >
         <g transform={`scale(${selected ? 1.9 : 1.3})`} className="transition-transform duration-300">
           <ellipse cx="0" cy="2" rx="7" ry="2.5" fill="rgba(0,0,0,0.18)" />
           <path

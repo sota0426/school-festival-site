@@ -1,4 +1,4 @@
-export default function ImageMapPin({ x, y, color, emoji, selected = false, label, onClick, size = 'normal', delay = 0, animate = false }) {
+export default function ImageMapPin({ x, y, color, emoji, selected = false, label, onClick, size = 'normal', delay = 0, animate = false, hidden = false }) {
   const dimensions = size === 'small' ? 'h-10 w-8' : 'h-12 w-9'
 
   return (
@@ -10,7 +10,10 @@ export default function ImageMapPin({ x, y, color, emoji, selected = false, labe
       aria-label={label}
       title={label}
     >
-      <span className={`block h-full w-full ${animate ? 'pin-drop' : ''}`} style={animate ? { animationDelay: `${delay}s` } : undefined}>
+      <span
+        className={`block h-full w-full ${animate ? 'pin-drop' : ''}`}
+        style={animate ? { animationDelay: `${delay}s` } : hidden ? { opacity: 0 } : undefined}
+      >
         <svg viewBox="-18 -43 36 46" className="h-full w-full overflow-visible drop-shadow-md" aria-hidden="true">
           {selected && (
             <circle

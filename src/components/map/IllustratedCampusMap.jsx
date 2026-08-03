@@ -24,6 +24,7 @@ export default function IllustratedCampusMap({ filter, selectedStallId, animatio
           color={CATEGORIES[stall.cat].color}
           emoji={CATEGORIES[stall.cat].emoji}
           selected={selectedStallId === stall.id}
+          animate={animationKey !== 'inactive'}
           delay={0.12 * index}
           onTap={(event) => {
             event.stopPropagation()

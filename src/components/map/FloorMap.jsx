@@ -110,6 +110,7 @@ export default function FloorMap({ buildingId, floorId, filter, selectedStallId,
             color={CATEGORIES[s.cat].color}
             emoji={CATEGORIES[s.cat].emoji}
             selected={selectedStallId === s.id}
+            animate={animationKey !== 'inactive'}
             delay={0.12 * i}
             onTap={(e) => {
               e.stopPropagation()
