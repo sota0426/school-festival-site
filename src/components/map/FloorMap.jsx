@@ -1,5 +1,5 @@
 import { FLOOR_PLANS, FLOOR_VIEW } from '../../data/floors'
-import { CATEGORIES } from '../../data/categories'
+import { CATEGORIES, pinEmojiForStall } from '../../data/categories'
 import { stallsOnFloor } from '../../data/stalls'
 import Pin from './Pin'
 
@@ -108,7 +108,7 @@ export default function FloorMap({ buildingId, floorId, filter, selectedStallId,
             x={pinX}
             y={pinY}
             color={CATEGORIES[s.cat].color}
-            emoji={CATEGORIES[s.cat].emoji}
+            emoji={pinEmojiForStall(s)}
             selected={selectedStallId === s.id}
             animate={animationKey !== 'inactive'}
             delay={0.12 * i}

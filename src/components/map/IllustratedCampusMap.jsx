@@ -1,5 +1,5 @@
 import { CAMPUS } from '../../data/campus'
-import { CATEGORIES } from '../../data/categories'
+import { CATEGORIES, pinEmojiForStall } from '../../data/categories'
 import { outdoorStalls } from '../../data/stalls'
 import Pin from './Pin'
 
@@ -22,7 +22,7 @@ export default function IllustratedCampusMap({ filter, selectedStallId, animatio
           x={stall.loc.x}
           y={stall.loc.y}
           color={CATEGORIES[stall.cat].color}
-          emoji={CATEGORIES[stall.cat].emoji}
+          emoji={pinEmojiForStall(stall)}
           selected={selectedStallId === stall.id}
           animate={animationKey !== 'inactive'}
           delay={0.12 * index}

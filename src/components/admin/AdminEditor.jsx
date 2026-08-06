@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { CAMPUS } from '../../data/campus'
-import { CATEGORIES } from '../../data/categories'
+import { CATEGORIES, pinEmojiForStall } from '../../data/categories'
 import { DEFAULT_FLOOR_MAPS, FLOOR_MAP_ASPECT_RATIOS, FLOOR_PLANS, FLOOR_VIEW, VISIBLE_FLOOR_KEYS } from '../../data/floors'
 import { STALLS, replaceStalls } from '../../data/stalls'
 import {
@@ -93,10 +93,10 @@ export default function AdminEditor({ onClose }) {
     setStalls((current) => current.map((stall) => {
       if (stall.id !== selected.id) return stall
       if (nextMap.type === 'out') {
-        return { ...stall, loc: { type: 'out', x: CAMPUS.w / 2, y: CAMPUS.h / 2 }, placeLabel: '敷地内全体' }
+        return { ...stall, loc: { type: 'out', x: CAMPUS.w / 2, y: CAMPUS.h / 2 } }
       }
       if (nextMap.type === 'guide') {
-        return { ...stall, loc: { type: 'guide', x: 50, y: 50 }, placeLabel: '校舎案内マップ' }
+        return { ...stall, loc: { type: 'guide', x: 50, y: 50 } }
       }
       const floor = FLOOR_PLANS[nextMap.building]?.floors.find((item) => item.id === nextMap.floor)
       return {
@@ -109,7 +109,6 @@ export default function AdminEditor({ onClose }) {
           pinX: FLOOR_VIEW.w / 2,
           pinY: FLOOR_VIEW.h / 2,
         },
-        placeLabel: nextMap.label,
       }
     }))
     setMapKey(nextMap.key)
@@ -127,7 +126,7 @@ export default function AdminEditor({ onClose }) {
         return { ...stall, loc: { type: 'out', x: px * CAMPUS.w, y: py * CAMPUS.h } }
       }
       if (map.type === 'guide') {
-        return { ...stall, loc: { type: 'guide', x: px * 100, y: py * 100 }, placeLabel: '校舎案内マップ' }
+        return { ...stall, loc: { type: 'guide', x: px * 100, y: py * 100 } }
       }
       const floor = FLOOR_PLANS[map.building]?.floors.find((item) => item.id === map.floor)
       const room = stall.loc.type === 'room' && stall.loc.building === map.building && stall.loc.floor === map.floor
@@ -345,7 +344,7 @@ function PinCanvas({ map, stalls, selectedId, mode, onPlace, onSelect }) {
             x={x}
             y={y}
             color={category.color}
-            emoji={category.emoji}
+            emoji={pinEmojiForStall(stall)}
             selected={stall.id === selectedId}
             label={`${stall.name}（クリックして選択）`}
             size="small"

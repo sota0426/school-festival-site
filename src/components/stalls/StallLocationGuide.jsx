@@ -1,5 +1,5 @@
 import { CAMPUS } from '../../data/campus'
-import { CATEGORIES } from '../../data/categories'
+import { CATEGORIES, pinEmojiForStall } from '../../data/categories'
 import { DEFAULT_FLOOR_MAPS, FLOOR_MAP_ASPECT_RATIOS, FLOOR_VIEW } from '../../data/floors'
 import { routeForStall } from '../../data/routes'
 import IllustratedCampusMap from '../map/IllustratedCampusMap'
@@ -63,7 +63,7 @@ export default function StallLocationGuide({ stall }) {
             x={stall.loc.x ?? 50}
             y={stall.loc.y ?? 50}
             color={category.color}
-            emoji={category.emoji}
+            emoji={pinEmojiForStall(stall)}
             selected
             animate
             delay={0.15}
@@ -75,7 +75,10 @@ export default function StallLocationGuide({ stall }) {
 
       {indoor ? (
         <>
-          <div className="mt-5 flex items-end justify-between gap-3">
+          <div className="my-4 flex flex-col items-center" aria-label={`${route.building} ${route.floor}へ移動`}>
+            <span className="text-2xl font-black leading-none text-fest" aria-hidden="true">↓</span>
+          </div>
+          <div className="flex items-end justify-between gap-3">
             <div>
               <p className="text-[10px] font-black tracking-[0.16em] text-fest">FLOOR MAP</p>
               <h3 className="text-lg font-black text-ink">{route.building} {route.floor}</h3>
@@ -93,7 +96,7 @@ export default function StallLocationGuide({ stall }) {
                   x={((stall.loc.pinX ?? FLOOR_VIEW.w / 2) / FLOOR_VIEW.w) * 100}
                   y={((stall.loc.pinY ?? FLOOR_VIEW.h / 2) / FLOOR_VIEW.h) * 100}
                   color={category.color}
-                  emoji={category.emoji}
+                  emoji={pinEmojiForStall(stall)}
                   selected
                   animate
                   delay={0.15}

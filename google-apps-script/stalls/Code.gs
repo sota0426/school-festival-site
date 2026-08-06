@@ -3,8 +3,9 @@ const STALLS_SHEET_NAME = '模擬店データ'
 const CACHE_KEY = 'festival-stalls-v1'
 const STALL_HEADERS = [
   'ID', '店名', 'クラス・団体', 'メニュー', '価格', 'カテゴリ', 'ジャンル',
-  '説明文', '画像ＵＲＬ', '配置マップ', '場所名', 'X座標', 'Y座標', '更新日時',
+  '説明文', '画像ＵＲＬ', '配置マップ', 'X座標', 'Y座標', '更新日時',
 ]
+const LEGACY_PLACE_HEADER = '場所名'
 
 function onOpen() {
   SpreadsheetApp.getUi()
@@ -22,6 +23,7 @@ function onEdit(event) {
 
 function setupStallsSheet() {
   const sheet = getStallsSheet_(true)
+  removeLegacyPlaceColumn_(sheet)
   const existing = sheet.getLastColumn() > 0
     ? sheet.getRange(1, 1, 1, sheet.getLastColumn()).getDisplayValues()[0]
     : []
@@ -48,6 +50,13 @@ function setupStallsSheet() {
   sheet.getRange('H:I').setWrap(true)
   if (!sheet.getFilter()) sheet.getDataRange().createFilter()
   SpreadsheetApp.getUi().alert('模擬店データシートの設定が完了しました。')
+}
+
+function removeLegacyPlaceColumn_(sheet) {
+  if (sheet.getLastColumn() < 1) return
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getDisplayValues()[0]
+  const columnIndex = headers.indexOf(LEGACY_PLACE_HEADER)
+  if (columnIndex >= 0) sheet.deleteColumn(columnIndex + 1)
 }
 
 function showApiSettings() {
@@ -95,6 +104,7 @@ function doPost(event) {
 
 function readStalls_() {
   const sheet = getStallsSheet_(false)
+  removeLegacyPlaceColumn_(sheet)
   if (sheet.getLastRow() < 2) return []
   const values = sheet.getRange(2, 1, sheet.getLastRow() - 1, STALL_HEADERS.length).getValues()
   return values
@@ -107,6 +117,7 @@ function readStalls_() {
 
 function replaceAllStalls_(stalls) {
   const sheet = getStallsSheet_(true)
+  removeLegacyPlaceColumn_(sheet)
   const now = new Date()
   const rows = stalls.map((stall) => STALL_HEADERS.map((header) => {
     if (header === '更新日時') return now

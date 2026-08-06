@@ -1,5 +1,5 @@
 import { CAMPUS, BUILDINGS, KIND_STYLE } from '../../data/campus'
-import { CATEGORIES } from '../../data/categories'
+import { CATEGORIES, pinEmojiForStall } from '../../data/categories'
 import { outdoorStalls, stallsInBuilding } from '../../data/stalls'
 import { FLOOR_PLANS } from '../../data/floors'
 import Pin from './Pin'
@@ -128,7 +128,7 @@ export default function CampusMap({ scale, filter, selectedStallId, animationKey
           x={s.loc.x}
           y={s.loc.y}
           color={CATEGORIES[s.cat].color}
-          emoji={CATEGORIES[s.cat].emoji}
+          emoji={pinEmojiForStall(s)}
           selected={selectedStallId === s.id}
           delay={0.12 * i}
           onTap={(e) => {

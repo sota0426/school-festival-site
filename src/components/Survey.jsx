@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { MIDDLE_SCHOOLS } from '../data/schools'
-import { saveSurvey } from '../lib/survey'
+import { saveSurvey, skipSurvey } from '../lib/survey'
 
 const VISIT_OPTIONS = [
   { value: 'onsite', emoji: '🏫', label: '文化祭に来場している', sub: '会場でこのサイトを見ています' },
@@ -11,6 +11,7 @@ const ROLE_OPTIONS = [
   { value: 'parent', emoji: '👨‍👩‍👧', label: '保護者' },
   { value: 'student', emoji: '🎒', label: '他校の生徒' },
   { value: 'jhs', emoji: '📚', label: '中学生' },
+  { value: 'current_student', emoji: '🏫', label: '在校生' },
   { value: 'other', emoji: '🙂', label: 'その他' },
 ]
 
@@ -77,8 +78,10 @@ export default function Survey({ onDone }) {
     setGrade(null)
     setVisitCount(null)
     setCompanion(null)
-    if (v === 'online') setStep(6)
-    else setStep(1)
+    if (v === 'online') {
+      skipSurvey()
+      setStep(7)
+    } else setStep(1)
   }
 
   const pickRole = (r) => {
@@ -87,7 +90,10 @@ export default function Survey({ onDone }) {
       setSchool('')
       setGrade(null)
     }
-    if (r === 'jhs') setStep(2)
+    if (r === 'current_student') {
+      skipSurvey()
+      setStep(7)
+    } else if (r === 'jhs') setStep(2)
     else setStep(4)
   }
 
@@ -100,18 +106,26 @@ export default function Survey({ onDone }) {
     if (step === 6) setStep(visiting === 'online' ? 0 : 5)
   }
 
-  const finishWithDiscovery = (value) => {
-    setDiscovery(value)
-    saveSurvey({
+  const finishSurvey = (overrides = {}) => {
+    const answer = {
       visiting,
       ...(role ? { role } : {}),
       ...(school ? { school } : {}),
       ...(grade ? { grade } : {}),
       ...(visitCount ? { visitCount } : {}),
       ...(companion ? { companion } : {}),
-      discovery: value,
+      ...(discovery ? { discovery } : {}),
+      ...overrides,
+    }
+    saveSurvey({
+      ...answer,
     })
     setStep(7)
+  }
+
+  const finishWithDiscovery = (value) => {
+    setDiscovery(value)
+    finishSurvey({ discovery: value })
   }
 
   const totalSteps = visiting === 'onsite' ? (role === 'jhs' ? 7 : 5) : 2
@@ -277,7 +291,8 @@ export default function Survey({ onDone }) {
                   selected={companion === o.value}
                   onClick={() => {
                     setCompanion(o.value)
-                    setStep(6)
+                    if (o.value === 'family') finishSurvey({ companion: o.value })
+                    else setStep(6)
                   }}
                 />
               ))}

@@ -85,3 +85,39 @@ export const PinIcon = (props) => (
     <circle cx="12" cy="10.5" r="2.5" />
   </svg>
 )
+
+export const CategoryIcon = ({ category, ...props }) => {
+  const paths = {
+    food: (
+      <>
+        <path d="M7 3v7M4.5 3v4.5A2.5 2.5 0 0 0 7 10a2.5 2.5 0 0 0 2.5-2.5V3M7 10v11" />
+        <path d="M16.5 3c-2 1.8-3 4-3 6.5 0 1.7 1.3 3 3 3V21M16.5 3V12.5" />
+      </>
+    ),
+    cafe: (
+      <>
+        <path d="M5 8h11v6.5A4.5 4.5 0 0 1 11.5 19h-2A4.5 4.5 0 0 1 5 14.5V8z" />
+        <path d="M16 10h1.5a2.5 2.5 0 0 1 0 5H16M8 3.5v2M12 3.5v2" />
+      </>
+    ),
+    game: (
+      <>
+        <circle cx="12" cy="12" r="8.5" />
+        <circle cx="12" cy="12" r="4.5" />
+        <circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" />
+      </>
+    ),
+    exhibit: (
+      <>
+        <rect x="4" y="4.5" width="16" height="13" rx="2" />
+        <path d="m7 14 3.5-3.5 2.5 2 2.5-3 2.5 4M9 21h6M12 17.5V21" />
+      </>
+    ),
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" width="24" height="24" {...base} {...props}>
+      {paths[category] || paths.exhibit}
+    </svg>
+  )
+}

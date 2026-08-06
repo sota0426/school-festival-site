@@ -66,10 +66,9 @@ export function driveImageUrl(value) {
 
 function stallFromSheet(row) {
   const map = MAP_FROM_SHEET[row['配置マップ']] || { type: 'out' }
-  const x = numberOrFallback(row['X座標'], map.type === 'out' ? 500 : map.type === 'guide' ? 50 : 450)
-  const y = numberOrFallback(row['Y座標'], map.type === 'out' ? 350 : map.type === 'guide' ? 50 : 215)
+  const { x, y } = coordinatesFromSheet(row, map.type)
   const loc = map.type === 'room'
-    ? { ...map, room: String(row['場所名'] || ''), pinX: x, pinY: y }
+    ? { ...map, room: '', pinX: x, pinY: y }
     : { ...map, x, y }
   return {
     id: String(row.ID || '').trim(),
@@ -78,13 +77,22 @@ function stallFromSheet(row) {
     cat: CATEGORY_FROM_SHEET[row['カテゴリ']] || row['カテゴリ'] || 'exhibit',
     ...(row['ジャンル'] ? { foodGenre: GENRE_FROM_SHEET[row['ジャンル']] || row['ジャンル'] } : {}),
     loc,
-    placeLabel: String(row['場所名'] || row['配置マップ'] || ''),
     menu: row['メニュー'] ? [[String(row['メニュー']), String(row['価格'] || '')]] : [],
     price: String(row['価格'] || ''),
     hours: '',
     pr: String(row['説明文'] || ''),
     poster: driveImageUrl(row['画像ＵＲＬ']),
     imageUrl: String(row['画像ＵＲＬ'] || ''),
+  }
+}
+
+function coordinatesFromSheet(row, mapType) {
+  const fallbackX = mapType === 'out' ? 500 : mapType === 'guide' ? 50 : 450
+  const fallbackY = mapType === 'out' ? 350 : mapType === 'guide' ? 50 : 215
+  const legacyShifted = isFiniteNumber(row['場所名']) && !isFiniteNumber(row['Y座標'])
+  return {
+    x: numberOrFallback(legacyShifted ? row['場所名'] : row['X座標'], fallbackX),
+    y: numberOrFallback(legacyShifted ? row['X座標'] : row['Y座標'], fallbackY),
   }
 }
 
@@ -100,7 +108,6 @@ function stallToSheet(stall) {
     説明文: stall.pr || '',
     '画像ＵＲＬ': stall.imageUrl || sourceImageUrl(stall.poster),
     配置マップ: mapNameForStall(stall),
-    場所名: stall.loc.type === 'room' ? stall.loc.room : stall.placeLabel,
     X座標: stall.loc.type === 'room' ? stall.loc.pinX ?? 450 : stall.loc.x ?? 50,
     Y座標: stall.loc.type === 'room' ? stall.loc.pinY ?? 215 : stall.loc.y ?? 50,
     更新日時: new Date().toISOString(),
@@ -123,6 +130,11 @@ function numberOrFallback(value, fallback) {
   if (value === '' || value === null || value === undefined) return fallback
   const number = Number(value)
   return Number.isFinite(number) ? number : fallback
+}
+
+function isFiniteNumber(value) {
+  if (value === '' || value === null || value === undefined) return false
+  return Number.isFinite(Number(value))
 }
 
 function reverseMap(value) {

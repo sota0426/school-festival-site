@@ -1,12 +1,11 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { SpreadsheetFile, Workbook } from '@oai/artifact-tool'
+import { DEFAULT_STALLS } from '../../src/data/stalls.js'
 
-const sourcePath = 'C:/Users/User/.codex/attachments/048ddc9d-0c74-4fa7-a9fa-928faffd8e96/pasted-text.txt'
-const outputDir = 'C:/プログラミング学習/school-festival-site/outputs/stalls-export'
-const source = JSON.parse(await fs.readFile(sourcePath, 'utf8'))
+const outputDir = path.resolve('outputs/stalls-export')
 
-const headers = ['ID', '店名', 'クラス・団体', 'メニュー', '価格', 'カテゴリ', 'ジャンル', '説明文', '画像ＵＲＬ', '配置マップ', '場所名', 'X座標', 'Y座標', '更新日時']
+const headers = ['ID', '店名', 'クラス・団体', 'メニュー', '価格', 'カテゴリ', 'ジャンル', '説明文', '画像ＵＲＬ', '配置マップ', 'X座標', 'Y座標', '更新日時']
 const categoryNames = {
   food: 'フード',
   cafe: 'カフェ',
@@ -25,7 +24,7 @@ const buildingNames = {
   minami: '南校舎',
   chugaku: '北校舎',
 }
-const exportedAt = new Date(source.exportedAt)
+const exportedAt = new Date()
 const updatedAt = new Intl.DateTimeFormat('ja-JP', {
   timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit',
   hour: '2-digit', minute: '2-digit', hour12: false,
@@ -37,7 +36,6 @@ const mapName = (loc) => {
   return `${buildingNames[loc.building] ?? loc.building}${loc.floor.toUpperCase()}`
 }
 
-const placeName = (stall) => stall.loc.type === 'room' ? stall.loc.room : stall.placeLabel
 const xCoordinate = (loc) => loc.type === 'room' ? (loc.pinX ?? '') : (loc.x ?? '')
 const yCoordinate = (loc) => loc.type === 'room' ? (loc.pinY ?? '') : (loc.y ?? '')
 const menuText = (menu) => Array.isArray(menu) && menu.length ? menu[0]?.[0] ?? '' : ''
@@ -45,7 +43,7 @@ const imageUrls = {
   s03: 'https://drive.google.com/file/d/101bH4O0Dgali5sqAM-atR3Rv5kZQ89Pv/view?usp=drive_link',
 }
 
-const rows = source.stalls.map((stall) => [
+const rows = DEFAULT_STALLS.map((stall) => [
   stall.id,
   stall.name,
   stall.org,
@@ -56,7 +54,6 @@ const rows = source.stalls.map((stall) => [
   stall.pr?.trim() || `${stall.name}をお楽しみください。詳しい内容は当日会場でご確認ください。`,
   imageUrls[stall.id] ?? '',
   mapName(stall.loc),
-  placeName(stall),
   xCoordinate(stall.loc),
   yCoordinate(stall.loc),
   updatedAt,
@@ -79,20 +76,20 @@ for (const sheet of [dataSheet]) {
   }
 }
 
-dataSheet.getRange(`A1:N${rows.length + 1}`).format.borders = { preset: 'inside', style: 'thin', color: '#D9E2F3' }
-dataSheet.getRange(`L2:M${rows.length + 1}`).format.numberFormat = '0.00'
-dataSheet.getRange(`N2:N${rows.length + 1}`).format.numberFormat = '@'
+dataSheet.getRange(`A1:M${rows.length + 1}`).format.borders = { preset: 'inside', style: 'thin', color: '#D9E2F3' }
+dataSheet.getRange(`K2:L${rows.length + 1}`).format.numberFormat = '0.00'
+dataSheet.getRange(`M2:M${rows.length + 1}`).format.numberFormat = '@'
 dataSheet.getRange(`A2:A${rows.length + 1}`).format.numberFormat = '@'
-dataSheet.getRange(`H2:K${rows.length + 1}`).format.numberFormat = '@'
-dataSheet.getRange(`A1:N${rows.length + 1}`).format.autofitColumns()
+dataSheet.getRange(`H2:J${rows.length + 1}`).format.numberFormat = '@'
+dataSheet.getRange(`A1:M${rows.length + 1}`).format.autofitColumns()
 dataSheet.getRange('B:B').format.columnWidthPx = 180
 dataSheet.getRange('D:D').format.columnWidthPx = 170
 dataSheet.getRange('H:H').format.columnWidthPx = 420
 dataSheet.getRange('I:I').format.columnWidthPx = 320
-dataSheet.getRange('J:K').format.columnWidthPx = 150
-dataSheet.getRange('N:N').format.columnWidthPx = 145
+dataSheet.getRange('J:J').format.columnWidthPx = 150
+dataSheet.getRange('M:M').format.columnWidthPx = 145
 dataSheet.getRange(`H2:I${rows.length + 1}`).format.wrapText = true
-dataSheet.tables.add(`A1:N${rows.length + 1}`, true, 'StallsTable').style = 'TableStyleMedium2'
+dataSheet.tables.add(`A1:M${rows.length + 1}`, true, 'StallsTable').style = 'TableStyleMedium2'
 dataSheet.getRange(`F2:F${rows.length + 1}`).dataValidation = {
   rule: { type: 'list', values: ['フード', 'カフェ', 'ゲーム', '展示など'] },
 }
@@ -114,15 +111,15 @@ const escapeCsv = (value) => {
 const csv = [headers, ...rows].map((row) => row.map(escapeCsv).join(',')).join('\r\n')
 await fs.writeFile(path.join(outputDir, '模擬店データ.csv'), `\uFEFF${csv}`, 'utf8')
 
-const preview = await workbook.render({ sheetName: '模擬店データ', range: `A1:N${Math.min(rows.length + 1, 12)}`, scale: 1.2, format: 'png' })
+const preview = await workbook.render({ sheetName: '模擬店データ', range: `A1:M${Math.min(rows.length + 1, 12)}`, scale: 1.2, format: 'png' })
 await fs.writeFile(path.join(outputDir, 'preview.png'), new Uint8Array(await preview.arrayBuffer()))
 
 const inspection = await workbook.inspect({
   kind: 'table',
-  range: `模擬店データ!A1:N${Math.min(rows.length + 1, 8)}`,
+  range: `模擬店データ!A1:M${Math.min(rows.length + 1, 8)}`,
   include: 'values,formulas',
   tableMaxRows: 8,
-  tableMaxCols: 14,
+  tableMaxCols: 13,
 })
 console.log(inspection.ndjson)
 console.log(JSON.stringify({ rows: rows.length, outputDir }))

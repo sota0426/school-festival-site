@@ -38,6 +38,7 @@ const VISITING_LABELS = {
 }
 
 const ROLE_LABELS = {
+  current_student: '在校生',
   parent: '保護者',
   student: '他校の生徒',
   jhs: '中学生',

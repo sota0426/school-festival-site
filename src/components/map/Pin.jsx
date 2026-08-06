@@ -12,7 +12,7 @@ export default function Pin({ x, y, color, emoji, selected, delay = 0, animate =
         className={animate ? 'pin-drop' : undefined}
         style={animate ? { animationDelay: `${delay}s` } : { opacity: 0 }}
       >
-        <g transform={`scale(${selected ? 1.9 : 1.3})`} className="transition-transform duration-300">
+        <g transform={`scale(${selected ? 2.45 : 1.8})`} className="transition-transform duration-300">
           <ellipse cx="0" cy="2" rx="7" ry="2.5" fill="rgba(0,0,0,0.18)" />
           <path
             d="M0,0 C-8,-13 -13,-18 -13,-26 a13,13 0 1,1 26,0 C13,-18 8,-13 0,0 Z"

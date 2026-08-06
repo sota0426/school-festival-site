@@ -51,6 +51,7 @@ const ROLE_OPTIONS = [
   { value: 'parent', label: '保護者' },
   { value: 'student', label: '他校の生徒' },
   { value: 'jhs', label: '中学生' },
+  { value: 'current_student', label: '在校生' },
   { value: 'other', label: 'その他' },
 ]
 

@@ -1,5 +1,5 @@
 export default function ImageMapPin({ x, y, color, emoji, selected = false, label, onClick, size = 'normal', delay = 0, animate = false, hidden = false }) {
-  const dimensions = size === 'small' ? 'h-10 w-8' : 'h-12 w-9'
+  const dimensions = size === 'small' ? 'h-12 w-9' : 'h-14 w-11'
 
   return (
     <button

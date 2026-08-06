@@ -2,13 +2,14 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { BUILDINGS, CAMPUS } from '../../data/campus'
 import { DEFAULT_FLOOR_MAPS, FLOOR_MAP_ASPECT_RATIOS, FLOOR_PLANS, FLOOR_VIEW, VISIBLE_FLOOR_KEYS } from '../../data/floors'
 import { STALLS, stallById } from '../../data/stalls'
-import { CATEGORIES } from '../../data/categories'
+import { CATEGORIES, pinEmojiForStall } from '../../data/categories'
 import { useApp } from '../../lib/AppContext'
 import { readMapAnnotations } from '../../lib/mapEditorStorage'
 import IllustratedCampusMap from './IllustratedCampusMap'
 import FloorMap from './FloorMap'
 import ImageMapPin from './ImageMapPin'
 import { stallPrice } from '../../lib/stallPrice'
+import { CategoryIcon } from '../Icons'
 
 const GROUNDS_KEY = 'grounds'
 const CAMPUS_KEY = 'campus'
@@ -178,7 +179,7 @@ export default function MapView({ mapTarget, dataVersion }) {
         aria-label="フロアマップ"
       >
         <div
-          className="pointer-events-none absolute left-2 top-1.5 z-40 max-w-[58%] rounded-lg border border-white/80 bg-white/90 px-2 py-1 shadow-sm backdrop-blur-sm"
+          className="pointer-events-none absolute left-2 top-1.5 z-40 max-w-[72%] rounded-lg border border-white/80 bg-white/90 px-2 py-1 shadow-sm backdrop-blur-sm"
           style={currentTone ? { backgroundColor: currentTone.badge, borderColor: currentTone.border } : undefined}
           aria-live="polite"
         >
@@ -380,7 +381,7 @@ function CustomMapImage({ image, annotations = [], label, accentColor, aspectRat
             x={x}
             y={y}
             color={category.color}
-            emoji={category.emoji}
+            emoji={pinEmojiForStall(stall)}
             selected={selectedStallId === stall.id}
             animate={animationKey !== 'inactive'}
             hidden={animationKey === 'inactive'}
@@ -425,7 +426,13 @@ function StallVerticalList({ stalls, onSelect, initialScrollTop = 0, nextMapLabe
                 onClick={() => onSelect(stall, listRef.current?.scrollTop || 0)}
                 className="flex w-full items-center gap-3 rounded-2xl border border-stone-100 bg-stone-50 p-3 text-left transition-transform active:scale-[0.98]"
               >
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-xl" style={{ background: cat.soft }}>{cat.emoji}</span>
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl" style={{ background: cat.soft, color: cat.color }}>
+                  {stall.cat === 'food' ? (
+                    <span className="text-2xl" aria-hidden="true">{pinEmojiForStall(stall)}</span>
+                  ) : (
+                    <CategoryIcon category={stall.cat} width="25" height="25" aria-hidden="true" />
+                  )}
+                </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-black text-ink">{stall.name}</span>
                   <span className="block truncate text-[11px] font-bold text-stone-500">{stall.org}</span>
@@ -466,7 +473,13 @@ function SelectedStallPanel({ stall, onDetail }) {
   return (
     <div data-tab-scroll="map" className="flex h-full flex-col overflow-y-auto px-4 py-3">
       <div className="flex items-start gap-3">
-        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl text-2xl" style={{ background: cat.soft }}>{cat.emoji}</span>
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl" style={{ background: cat.soft, color: cat.color }}>
+          {stall.cat === 'food' ? (
+            <span className="text-3xl" aria-hidden="true">{pinEmojiForStall(stall)}</span>
+          ) : (
+            <CategoryIcon category={stall.cat} width="28" height="28" aria-hidden="true" />
+          )}
+        </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="rounded-full px-2.5 py-1 text-[10px] font-black text-white" style={{ background: cat.color }}>{cat.label}</span>

@@ -37,6 +37,10 @@ export function saveSurvey(answer) {
   sendToGas(record)
 }
 
+export function skipSurvey() {
+  localStorage.setItem(KEY, JSON.stringify({ skipped: true, answeredAt: new Date().toISOString() }))
+}
+
 export function saveExitSurvey(answer) {
   if (loadExitSurvey()) return false
 

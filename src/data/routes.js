@@ -17,8 +17,8 @@ export function routeForStall(stall) {
     return {
       type: 'guide',
       start: '中央校舎・生徒玄関',
-      destination: stall.placeLabel,
-      summary: `生徒玄関 → ${stall.placeLabel}`,
+      destination: '校舎案内マップ',
+      summary: '生徒玄関 → 校舎案内マップ',
       instruction: '校舎案内マップで場所をご確認ください',
     }
   }
@@ -27,9 +27,9 @@ export function routeForStall(stall) {
     return {
       type: 'outdoor',
       start: '中央校舎・生徒玄関',
-      destination: stall.placeLabel,
-      summary: `生徒玄関 → ${stall.placeLabel}`,
-      instruction: `生徒玄関を出て、校内案内の「${stall.placeLabel}」方面へ進みます`,
+      destination: '敷地内マップ',
+      summary: '生徒玄関 → 敷地内マップ',
+      instruction: '生徒玄関を出て、敷地内マップで場所をご確認ください',
     }
   }
 

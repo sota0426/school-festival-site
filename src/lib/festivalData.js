@@ -13,7 +13,6 @@ const HEADER_KEYS = {
   'クラス・団体': 'org',
   カテゴリ: 'cat',
   食品ジャンル: 'foodGenre',
-  場所表示: 'placeLabel',
   場所種別: 'type',
   校舎: 'building',
   階: 'floor',
@@ -87,13 +86,6 @@ export function parseCsv(text) {
     const floor = floorIdFromLabel(building, record.floor)
     const room = roomIdFromName(building, floor, record.room, record.id)
     const indoor = type === 'room'
-    const existingStall = DEFAULT_STALLS.find((stall) => stall.id === record.id)
-    const placeLabel =
-      record.placeLabel ||
-      existingStall?.placeLabel ||
-      (indoor
-        ? `${BUILDING_TO_JA[building] || building}${floorLabel(building, floor)} ${record.room}`.trim()
-        : '屋外')
     return {
       id: record.id,
       name: record.name,
@@ -112,7 +104,6 @@ export function parseCsv(text) {
             x: Number(record.x) || 500,
             y: Number(record.y) || 350,
           },
-      placeLabel,
       menu: parseMenu(record.menu),
       hours: '',
       pr: record.pr,
@@ -188,11 +179,7 @@ function roomName(buildingId, floorId, roomId) {
 
 function csvRoomName(stall) {
   if (stall.loc.type !== 'room') return ''
-  const building = BUILDING_TO_JA[stall.loc.building] || ''
-  const floor = floorLabel(stall.loc.building, stall.loc.floor)
-  const prefixPattern = new RegExp(`^${escapeRegExp(building)}\\s*${escapeRegExp(floor.replace('階', 'F'))}[・\\s]*`)
-  const fromPlaceLabel = String(stall.placeLabel || '').replace(prefixPattern, '').trim()
-  return fromPlaceLabel || roomName(stall.loc.building, stall.loc.floor, stall.loc.room)
+  return roomName(stall.loc.building, stall.loc.floor, stall.loc.room)
 }
 
 function roomIdFromName(buildingId, floorId, value, stallId) {
@@ -217,10 +204,6 @@ function roomIdFromName(buildingId, floorId, value, stallId) {
   return FLOOR_PLANS[buildingId]?.floors
     .find((floor) => floor.id === floorId)?.rooms
     .find((room) => room.name === value || room.id === value)?.id || value
-}
-
-function escapeRegExp(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
 export function downloadText(filename, content, type) {

@@ -16,3 +16,8 @@ export const FOOD_GENRES = {
 }
 
 export const FOOD_GENRE_IDS = Object.keys(FOOD_GENRES)
+
+export function pinEmojiForStall(stall) {
+  if (stall.cat === 'food') return FOOD_GENRES[stall.foodGenre]?.emoji || CATEGORIES.food.emoji
+  return CATEGORIES[stall.cat]?.emoji || CATEGORIES.exhibit.emoji
+}
